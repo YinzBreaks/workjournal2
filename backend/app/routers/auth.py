@@ -7,12 +7,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
 from app.dependencies import get_current_user, get_db
-from app.models.base import User
+from app.models.instructor import Instructor
+from app.models.user import User, UserRole
 from app.services.auth import (
-    blacklist_refresh_token,
     create_token_pair,
+    hash_password,
     log_audit,
-    verify_pin,
+    revoke_refresh_token,
+    verify_password,
     verify_refresh_token,
 )
 from app.services.oidc import (
@@ -31,8 +33,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 class PinLoginRequest(BaseModel):
-    program_id: str
-    user_id: str
+    student_id: int
     pin: str
 
 
@@ -91,13 +92,11 @@ async def oidc_callback(
     error = request.query_params.get("error")
 
     if error:
-        await log_audit(db, "oidc_callback_error", ip_address=ip, details=error)
+        await log_audit(db, "oidc_callback_error", ip_address=ip, extra={"error": error})
         raise HTTPException(status_code=400, detail=f"OIDC error: {error}")
 
     if not code or not state:
-        await log_audit(
-            db, "oidc_callback_missing_params", ip_address=ip
-        )
+        await log_audit(db, "oidc_callback_missing_params", ip_address=ip)
         raise HTTPException(status_code=400, detail="Missing code or state")
 
     cookie_value = request.cookies.get("oidc_state")
@@ -130,7 +129,7 @@ async def oidc_callback(
         id_claims = await validate_id_token(id_token, cookie_data["nonce"])
     except Exception as e:
         await log_audit(
-            db, "oidc_id_token_invalid", ip_address=ip, details=str(e)
+            db, "oidc_id_token_invalid", ip_address=ip, extra={"detail": str(e)}
         )
         raise HTTPException(status_code=401, detail="Invalid id_token")
 
@@ -138,24 +137,40 @@ async def oidc_callback(
     email = id_claims.get("email") or id_claims.get("preferred_username")
     display_name = id_claims.get("name", email or "Unknown")
 
-    result = await db.execute(select(User).where(User.entra_oid == entra_oid))
-    user = result.scalar_one_or_none()
+    result = await db.execute(
+        select(Instructor).where(Instructor.entra_oid == entra_oid)
+    )
+    instructor = result.scalar_one_or_none()
 
-    if user is None:
+    if instructor is None:
+        first_name, _, last_name = display_name.partition(" ")
         user = User(
+            username=email or entra_oid,
             email=email,
-            display_name=display_name,
-            role="teacher",
-            entra_oid=entra_oid,
+            password_hash="",
+            first_name=first_name,
+            last_name=last_name,
+            role=UserRole.teacher,
         )
         db.add(user)
+        await db.flush()
+
+        instructor = Instructor(
+            user_id=user.id,
+            entra_oid=entra_oid,
+            entra_email=email,
+        )
+        db.add(instructor)
         await db.commit()
         await db.refresh(user)
         await log_audit(
             db, "teacher_provisioned", user_id=user.id, ip_address=ip
         )
+    else:
+        await db.refresh(instructor, ["user"])
+        user = instructor.user
 
-    tokens = create_token_pair(user.id, user.role, user.email)
+    tokens = create_token_pair(user)
     await log_audit(db, "oidc_login_success", user_id=user.id, ip_address=ip)
 
     response = Response(
@@ -170,8 +185,8 @@ async def oidc_callback(
 # --- PIN (Student) ---
 
 
-@router.post("/pin", response_model=TokenResponse)
-async def pin_login(
+@router.post("/student/login", response_model=TokenResponse)
+async def student_pin_login(
     body: PinLoginRequest,
     request: Request,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -180,29 +195,25 @@ async def pin_login(
 
     result = await db.execute(
         select(User).where(
-            User.id == body.user_id,
-            User.program_id == body.program_id,
-            User.role == "student",
+            User.id == body.student_id,
+            User.role == UserRole.student,
+            User.active == True,
         )
     )
     user = result.scalar_one_or_none()
 
-    if user is None or user.pin_hash is None:
+    if user is None or not user.password_hash:
         await log_audit(
-            db,
-            "pin_login_user_not_found",
-            ip_address=ip,
-            details=f"program={body.program_id} user={body.user_id}",
+            db, "pin_login_user_not_found", ip_address=ip,
+            extra={"student_id": body.student_id},
         )
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    if not verify_pin(body.pin, user.pin_hash):
-        await log_audit(
-            db, "pin_login_failed", user_id=user.id, ip_address=ip
-        )
+    if not verify_password(body.pin, user.password_hash):
+        await log_audit(db, "pin_login_failed", user_id=user.id, ip_address=ip)
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    tokens = create_token_pair(user.id, user.role)
+    tokens = create_token_pair(user)
     await log_audit(db, "pin_login_success", user_id=user.id, ip_address=ip)
     return tokens
 
@@ -221,29 +232,32 @@ async def admin_login(
 
     if body.username != settings.ADMIN_USER or body.password != settings.ADMIN_PASS:
         await log_audit(
-            db,
-            "admin_login_failed",
-            ip_address=ip,
-            details=f"username={body.username}",
+            db, "admin_login_failed", ip_address=ip,
+            extra={"username": body.username},
         )
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     result = await db.execute(
-        select(User).where(User.email == settings.ADMIN_USER, User.role == "admin")
+        select(User).where(
+            User.username == settings.ADMIN_USER, User.role == UserRole.admin
+        )
     )
     admin_user = result.scalar_one_or_none()
 
     if admin_user is None:
         admin_user = User(
-            email=settings.ADMIN_USER,
-            display_name="Admin",
-            role="admin",
+            username=settings.ADMIN_USER,
+            email=settings.ADMIN_USER if "@" in settings.ADMIN_USER else None,
+            password_hash=hash_password(settings.ADMIN_PASS),
+            first_name="Admin",
+            last_name="",
+            role=UserRole.admin,
         )
         db.add(admin_user)
         await db.commit()
         await db.refresh(admin_user)
 
-    tokens = create_token_pair(admin_user.id, admin_user.role, admin_user.email)
+    tokens = create_token_pair(admin_user)
     await log_audit(
         db, "admin_login_success", user_id=admin_user.id, ip_address=ip
     )
@@ -266,10 +280,16 @@ async def refresh(
         await log_audit(db, "refresh_failed", ip_address=ip)
         raise HTTPException(status_code=401, detail="Invalid refresh token")
 
-    await blacklist_refresh_token(body.refresh_token, db)
+    await revoke_refresh_token(body.refresh_token, db)
 
-    tokens = create_token_pair(payload["sub"], payload["role"])
-    await log_audit(db, "token_refreshed", user_id=payload["sub"], ip_address=ip)
+    user_id = payload.get("user_id")
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if user is None:
+        raise HTTPException(status_code=401, detail="User not found")
+
+    tokens = create_token_pair(user)
+    await log_audit(db, "token_refreshed", user_id=user.id, ip_address=ip)
     return tokens
 
 
@@ -284,7 +304,7 @@ async def logout(
 ):
     ip = request.client.host if request.client else None
 
-    success = await blacklist_refresh_token(body.refresh_token, db)
+    success = await revoke_refresh_token(body.refresh_token, db)
     if success:
         await log_audit(db, "logout_success", ip_address=ip)
     else:
