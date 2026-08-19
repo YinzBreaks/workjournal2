@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.models import Base, get_async_engine
-from app.routers import auth, health
+from app.routers import auth, health, programs
 
 
 @asynccontextmanager
@@ -27,8 +27,9 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    app.include_router(health.router)
-    app.include_router(auth.router)
+    app.include_router(health.router, prefix="/api")
+    app.include_router(auth.router, prefix="/api")
+    app.include_router(programs.router, prefix="/api")
 
     return app
 
