@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.models import Base, get_async_engine
-from app.routers import auth, health, programs, support_staff, tasks
+from app.routers import admin, auth, health, programs, students, support_staff, tasks, teachers
 
 
 @asynccontextmanager
@@ -32,6 +32,9 @@ def create_app() -> FastAPI:
     app.include_router(programs.router, prefix="/api")
     app.include_router(support_staff.router, prefix="/api")
     app.include_router(tasks.router, prefix="/api")
+    app.include_router(students.router, prefix="/api")
+    app.include_router(teachers.router, prefix="/api")
+    app.include_router(admin.router, prefix="/api")
 
     return app
 
