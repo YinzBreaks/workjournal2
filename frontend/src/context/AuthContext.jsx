@@ -77,22 +77,30 @@ export function AuthProvider({ children }) {
   );
 
   useEffect(() => {
+    let ignore = false;
     const existingRefresh = getRefreshToken();
     if (existingRefresh) {
       api
         .post("/auth/refresh", { refresh_token: existingRefresh })
         .then(({ data }) => {
-          processTokens(data.access_token, data.refresh_token);
+          // A refresh token can only be redeemed once. In React 18 dev
+          // StrictMode this effect runs twice on mount, so two requests
+          // can race with the same stored token -- the loser's 401 must
+          // not undo the winner's freshly-stored token below.
+          if (!ignore) processTokens(data.access_token, data.refresh_token);
         })
         .catch(() => {
-          clearTokens();
+          if (!ignore) clearTokens();
         })
-        .finally(() => setLoading(false));
+        .finally(() => {
+          if (!ignore) setLoading(false);
+        });
     } else {
       setLoading(false);
     }
 
     return () => {
+      ignore = true;
       if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
     };
   }, [processTokens]);

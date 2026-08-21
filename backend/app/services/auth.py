@@ -5,6 +5,7 @@ import bcrypt
 from jose import jwt as jose_jwt
 from jose.exceptions import JWTError
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
@@ -107,6 +108,16 @@ async def revoke_refresh_token(token: str, db: AsyncSession) -> bool:
         user_id = payload.get("user_id")
         exp = payload.get("exp")
 
+        result = await db.execute(
+            select(RefreshToken).where(RefreshToken.token_hash == token_hash)
+        )
+        if result.scalar_one_or_none() is not None:
+            # Already revoked -- two concurrent refreshes (e.g. React
+            # StrictMode's double-invoked effect, or two tabs) can both
+            # reach here with the same token. The end state is the same
+            # either way, so this isn't an error.
+            return True
+
         entry = RefreshToken(
             token_hash=token_hash,
             user_id=user_id,
@@ -114,7 +125,11 @@ async def revoke_refresh_token(token: str, db: AsyncSession) -> bool:
             revoked=True,
         )
         db.add(entry)
-        await db.commit()
+        try:
+            await db.commit()
+        except IntegrityError:
+            # Lost the race between the check above and this insert.
+            await db.rollback()
         return True
     except JWTError:
         return False
