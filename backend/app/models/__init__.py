@@ -3,7 +3,7 @@ from app.models.user import User, UserRole
 from app.models.instructor import Instructor
 from app.models.program import Program, ProgramInstructor, ProgramStudent
 from app.models.project import Project
-from app.models.task import Task, Assignment, AssignmentStatus
+from app.models.task import Task, Assignment, AssignmentStatus, TaskSupportStaff
 from app.models.student_project import StudentProject
 from app.models.worklog import WorkLog
 from app.models.submission import Submission, Feedback
@@ -25,6 +25,7 @@ __all__ = [
     "Task",
     "Assignment",
     "AssignmentStatus",
+    "TaskSupportStaff",
     "StudentProject",
     "WorkLog",
     "Submission",

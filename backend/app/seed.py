@@ -163,10 +163,9 @@ LEARNING_SUPPORT = [
     ("Jonathan", "Chuckery", "Educational Support", "412.847.1947"),
 ]
 
-# School-wide: work with all students, not assigned to a program. Teachers
-# should eventually be able to route tasks to these folks for help -- that
-# needs a schema change (a support-staff link on Task) that doesn't exist
-# yet, so for now they're just seeded as staff.
+# School-wide: work with all students, not assigned to a program. Marked
+# school_wide=True so they show up in GET /api/support-staff for teachers
+# to tag onto tasks.
 INTEGRATION_INSTRUCTORS = [
     ("Gretchen", "Boyette", "English Language Learners Coord.", "412.847.1913"),
     ("Jen", "Groomes", "Math Integration", "412.847.1958"),
@@ -223,7 +222,9 @@ def username_for(first, last):
     return f"{first.lower()}.{last.lower()}"
 
 
-async def get_or_create_instructor(db, *, first, last, title, phone) -> tuple[Instructor, bool]:
+async def get_or_create_instructor(
+    db, *, first, last, title, phone, school_wide=False
+) -> tuple[Instructor, bool]:
     username = username_for(first, last)
     user, _ = await get_or_create_user(
         db,
@@ -242,7 +243,9 @@ async def get_or_create_instructor(db, *, first, last, title, phone) -> tuple[In
     if instructor is not None:
         return instructor, False
 
-    instructor = Instructor(user_id=user.id, title=title, phone=phone)
+    instructor = Instructor(
+        user_id=user.id, title=title, phone=phone, school_wide=school_wide
+    )
     db.add(instructor)
     await db.flush()
     return instructor, True
@@ -348,7 +351,7 @@ async def seed() -> None:
 
         for first, last, title, phone in INTEGRATION_INSTRUCTORS:
             _, created = await get_or_create_instructor(
-                db, first=first, last=last, title=title, phone=phone
+                db, first=first, last=last, title=title, phone=phone, school_wide=True
             )
             print(f"{'Created' if created else 'Found'} integration instructor: {first} {last} ({title})")
 

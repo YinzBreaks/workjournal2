@@ -28,6 +28,20 @@ class Task(Base):
     assignments: Mapped[list["Assignment"]] = relationship(
         back_populates="task", cascade="all, delete-orphan"
     )
+    support_staff: Mapped[list["Instructor"]] = relationship(
+        secondary="task_support_staff", back_populates="support_tasks"
+    )
+
+
+class TaskSupportStaff(Base):
+    __tablename__ = "task_support_staff"
+
+    task_id: Mapped[int] = mapped_column(
+        ForeignKey("tasks.id", ondelete="CASCADE"), primary_key=True
+    )
+    instructor_id: Mapped[int] = mapped_column(
+        ForeignKey("instructors.id", ondelete="CASCADE"), primary_key=True
+    )
 
 
 class Assignment(Base):
@@ -57,3 +71,4 @@ class Assignment(Base):
 from app.models.project import Project  # noqa: E402
 from app.models.student_project import StudentProject  # noqa: E402
 from app.models.submission import Submission  # noqa: E402
+from app.models.instructor import Instructor  # noqa: E402
