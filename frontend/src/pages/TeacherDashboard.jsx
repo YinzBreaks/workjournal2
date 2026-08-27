@@ -90,7 +90,7 @@ export default function TeacherDashboard() {
           <select
             value={selectedProgramId || ""}
             onChange={(e) => setSelectedProgramId(Number(e.target.value))}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
           >
             {programs.map((p) => (
               <option key={p.id} value={p.id}>
@@ -147,13 +147,13 @@ export default function TeacherDashboard() {
                   {task.support_staff.map((staff) => (
                     <span
                       key={staff.id}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 pl-2.5 pr-1.5 py-1 text-xs font-medium text-blue-700"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 pl-2.5 pr-1.5 py-1 text-xs font-medium text-brand-700"
                     >
                       {staff.name}
                       {staff.title ? ` (${staff.title})` : ""}
                       <button
                         onClick={() => removeSupportStaff(task.id, staff.id)}
-                        className="rounded-full hover:bg-blue-100 w-4 h-4 flex items-center justify-center"
+                        className="rounded-full hover:bg-brand-100 w-4 h-4 flex items-center justify-center"
                         aria-label={`Remove ${staff.name}`}
                       >
                         &times;
@@ -166,7 +166,7 @@ export default function TeacherDashboard() {
                     onChange={(e) =>
                       setPendingTag((prev) => ({ ...prev, [task.id]: e.target.value }))
                     }
-                    className="text-xs rounded-full border border-gray-300 px-2 py-1 text-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    className="text-xs rounded-full border border-gray-300 px-2 py-1 text-gray-600 focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
                   >
                     <option value="">+ Get help from...</option>
                     {supportStaff
@@ -180,7 +180,7 @@ export default function TeacherDashboard() {
                   {pendingTag[task.id] && (
                     <button
                       onClick={() => addSupportStaff(task.id, pendingTag[task.id])}
-                      className="text-xs font-medium text-blue-600 hover:text-blue-700"
+                      className="text-xs font-medium text-brand-600 hover:text-brand-700"
                     >
                       Add
                     </button>

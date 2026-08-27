@@ -62,7 +62,7 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900">WorkJournal</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Beattie Journal</h1>
           <p className="mt-2 text-gray-600">Sign in to continue</p>
         </div>
 
@@ -92,7 +92,7 @@ export default function Login() {
 
             <button
               onClick={() => setMode("student")}
-              className="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
+              className="w-full rounded-lg bg-brand-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-brand-700"
             >
               Student Sign In
             </button>
@@ -109,7 +109,7 @@ export default function Login() {
                 value={selectedProgram}
                 onChange={(e) => setSelectedProgram(e.target.value)}
                 required
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
               >
                 <option value="">Select a program...</option>
                 {programs.map((p) => (
@@ -129,7 +129,7 @@ export default function Login() {
                 onChange={(e) => setSelectedStudent(e.target.value)}
                 required
                 disabled={!selectedProgram}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 disabled:bg-gray-100"
               >
                 <option value="">Select a student...</option>
                 {students.map((s) => (
@@ -153,7 +153,7 @@ export default function Login() {
                 onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
                 required
                 placeholder="4-digit PIN"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm tracking-widest text-center focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm tracking-widest text-center focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
               />
             </div>
 
@@ -164,7 +164,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading || pin.length !== 4}
-              className="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-50"
+              className="w-full rounded-lg bg-brand-600 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-brand-700 disabled:opacity-50"
             >
               {loading ? "Signing in..." : "Sign In"}
             </button>

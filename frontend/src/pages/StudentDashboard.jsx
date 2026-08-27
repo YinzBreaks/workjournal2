@@ -81,7 +81,7 @@ export default function StudentDashboard() {
                     {task.support_staff.map((staff) => (
                       <span
                         key={staff.id}
-                        className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700"
+                        className="inline-flex items-center rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-700"
                       >
                         Need help? Ask {staff.name}
                         {staff.title ? ` (${staff.title})` : ""}

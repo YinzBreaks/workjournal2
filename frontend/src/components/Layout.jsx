@@ -36,7 +36,7 @@ export default function Layout() {
           <div className="flex justify-between h-14">
             <div className="flex items-center gap-8">
               <Link to="/" className="text-lg font-bold text-gray-900">
-                WorkJournal
+                Beattie Journal
               </Link>
               <div className="hidden sm:flex gap-1">
                 {navItems.map((item) => (
@@ -53,7 +53,7 @@ export default function Layout() {
             <div className="flex items-center gap-4">
               <span className="text-sm text-gray-600">
                 {user?.name}{" "}
-                <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+                <span className="inline-flex items-center rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">
                   {role}
                 </span>
               </span>

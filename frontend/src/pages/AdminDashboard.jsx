@@ -58,7 +58,7 @@ export default function AdminDashboard() {
                   {p.assistants.length > 0 && <> &middot; IA: {p.assistants.join(", ")}</>}
                 </p>
               </div>
-              <span className="shrink-0 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">
+              <span className="shrink-0 rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-medium text-brand-700">
                 {p.student_count} student{p.student_count === 1 ? "" : "s"}
               </span>
             </div>
