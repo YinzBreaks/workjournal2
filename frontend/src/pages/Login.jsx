@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../lib/api";
+import BeattieLogo from "../components/BeattieLogo";
 
 export default function Login() {
   const { isAuthenticated, login } = useAuth();
@@ -62,6 +63,7 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
+          <BeattieLogo size={72} className="mx-auto mb-3" />
           <h1 className="text-3xl font-bold text-gray-900">Beattie Journal</h1>
           <p className="mt-2 text-gray-600">Sign in to continue</p>
         </div>

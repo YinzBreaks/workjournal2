@@ -1,5 +1,6 @@
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import BeattieLogo from "./BeattieLogo";
 
 const NAV_ITEMS = {
   admin: [
@@ -35,7 +36,8 @@ export default function Layout() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-14">
             <div className="flex items-center gap-8">
-              <Link to="/" className="text-lg font-bold text-gray-900">
+              <Link to="/" className="flex items-center gap-2 text-lg font-bold text-gray-900">
+                <BeattieLogo size={32} />
                 Beattie Journal
               </Link>
               <div className="hidden sm:flex gap-1">
