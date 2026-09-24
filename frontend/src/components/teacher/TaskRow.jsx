@@ -2,12 +2,15 @@ import { useState } from "react";
 import { useT } from "../../i18n";
 import api, { errorMessage } from "../../lib/api";
 import { STATUSES, STATUS_PILL } from "../../lib/status";
+import ItemForm from "./ItemForm";
 
 // One task in the teacher view: status counts, plus tagging integration
 // staff students can ask for help. onStaffChange(taskId, newStaffList),
-// onDelete(task) after the teacher confirms.
-export default function TaskRow({ task, supportStaff, onStaffChange, onDelete }) {
+// onSave(task, { title, description }) returns a promise, onDelete(task)
+// confirms and deletes.
+export default function TaskRow({ task, supportStaff, onStaffChange, onSave, onDelete }) {
   const t = useT();
+  const [editing, setEditing] = useState(false);
   const [adding, setAdding] = useState("");
   const [error, setError] = useState("");
 
@@ -34,6 +37,25 @@ export default function TaskRow({ task, supportStaff, onStaffChange, onDelete })
 
   const available = supportStaff.filter((s) => !task.support_staff.some((t) => t.id === s.id));
 
+  if (editing) {
+    return (
+      <div className="p-4">
+        <ItemForm
+          initial={task}
+          titleLabel={t("teacher.taskTitle")}
+          descriptionLabel={t("teacher.taskDescription")}
+          submitLabel={t("teacher.save")}
+          savingLabel={t("teacher.saving")}
+          onSubmit={async (fields) => {
+            await onSave(task, fields);
+            setEditing(false);
+          }}
+          onCancel={() => setEditing(false)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -47,6 +69,9 @@ export default function TaskRow({ task, supportStaff, onStaffChange, onDelete })
               {t("teacher.statCount", { count: task.stats[status], status: t(`status.${status}`) })}
             </span>
           ))}
+          <button onClick={() => setEditing(true)} className="text-gray-500 hover:text-gray-800">
+            {t("teacher.edit")}
+          </button>
           <button onClick={() => onDelete(task)} className="text-gray-500 hover:text-red-600">
             {t("teacher.delete")}
           </button>

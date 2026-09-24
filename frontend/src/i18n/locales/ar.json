@@ -87,7 +87,10 @@
     "delete": "حذف",
     "deleteProject": "حذف المشروع",
     "confirmDeleteProject": "حذف \"{title}\" وجميع مهامه؟ سيفقد الطلاب تقدمهم فيها.",
-    "confirmDeleteTask": "حذف \"{title}\"؟ سيفقد الطلاب تقدمهم فيها."
+    "confirmDeleteTask": "حذف \"{title}\"؟ سيفقد الطلاب تقدمهم فيها.",
+    "edit": "تعديل",
+    "save": "حفظ",
+    "saving": "جارٍ الحفظ..."
   },
   "admin": {
     "loadFailed": "تعذّر تحميل النظرة العامة. حدّث الصفحة وحاول مرة أخرى.",

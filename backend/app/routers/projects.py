@@ -1,4 +1,4 @@
-"""Teachers building their class: create and remove projects and tasks.
+"""Teachers building their class: create, edit, and remove projects and tasks.
 
 A new task is assigned to every student enrolled in the program right away.
 Students who join later get it on first sign-in (provisioning.py).
@@ -12,7 +12,14 @@ from app.db import get_db
 from app.errors import not_found
 from app.models import Assignment, Program, ProgramStudent, Project, Task, User, UserRole
 from app.ratelimit import limit_writes
-from app.schemas import ProgramProjectOut, ProgramTaskOut, ProjectIn, TaskIn, TaskStatsOut
+from app.schemas import (
+    ItemOut,
+    ProgramProjectOut,
+    ProgramTaskOut,
+    ProjectIn,
+    TaskIn,
+    TaskStatsOut,
+)
 from app.security import ensure_program_access, require_role
 
 router = APIRouter(tags=["projects"])
@@ -53,6 +60,21 @@ async def create_project(
     return ProgramProjectOut(
         id=project.id, title=project.title, description=project.description, tasks=[]
     )
+
+
+@router.patch("/projects/{project_id}", response_model=ItemOut)
+async def update_project(
+    project_id: int,
+    body: ProjectIn,
+    user: User = Depends(staff_only),
+    _: User = Depends(limit_writes),
+    db: AsyncSession = Depends(get_db),
+):
+    project = await _project_for(db, user, project_id)
+    project.title = body.title.strip()
+    project.description = body.description.strip()
+    await db.commit()
+    return ItemOut(id=project.id, title=project.title, description=project.description)
 
 
 @router.delete("/projects/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -112,6 +134,25 @@ async def create_task(
         support_staff=[],
         stats=TaskStatsOut(not_started=len(student_ids)),
     )
+
+
+@router.patch("/tasks/{task_id}", response_model=ItemOut)
+async def update_task(
+    task_id: int,
+    body: TaskIn,
+    user: User = Depends(staff_only),
+    _: User = Depends(limit_writes),
+    db: AsyncSession = Depends(get_db),
+):
+    """Students keep their progress: only the wording changes."""
+    task = await db.get(Task, task_id)
+    if task is None:
+        raise not_found()
+    await ensure_program_access(db, user, task.project.program_id)
+    task.title = body.title.strip()
+    task.description = body.description.strip()
+    await db.commit()
+    return ItemOut(id=task.id, title=task.title, description=task.description)
 
 
 @router.delete("/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT)

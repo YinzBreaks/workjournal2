@@ -126,6 +126,14 @@ class TaskIn(StrictIn):
     description: str = Field(default="", max_length=2000)
 
 
+class ItemOut(BaseModel):
+    """What an edit returns: the saved title and description."""
+
+    id: int
+    title: str
+    description: str
+
+
 # --- Admin ---
 
 

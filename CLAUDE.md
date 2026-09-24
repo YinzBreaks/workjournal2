@@ -89,9 +89,10 @@ frontend file, or one of each.
       routers/
         auth.py         GET /auth/me (id, name, role, logout_url)
         programs.py     /programs/mine, /{id}/roster, /{id}/projects
-        projects.py     POST /programs/{id}/projects, DELETE /projects/{id},
+        projects.py     POST /programs/{id}/projects, PATCH/DELETE /projects/{id},
                         POST /projects/{id}/tasks (assigns to every enrolled
-                        student), DELETE /tasks/{id}  (teachers/admins)
+                        student), PATCH/DELETE /tasks/{id}  (teachers/admins;
+                        editing keeps student progress)
         assignments.py  GET /assignments (own), PATCH /assignments/{id}
         worklogs.py     GET/POST /worklogs, DELETE /worklogs/{id} (own)
         tasks.py        GET /support-staff, POST/DELETE /tasks/{id}/support-staff
@@ -114,8 +115,10 @@ frontend file, or one of each.
       pages/student/            TasksPage (one task at a time), HoursPage
       components/student/       AssignmentCard, HoursForm
       pages/teacher/            ProgramPage (teachers and admins)
-      components/teacher/       RosterTable, TaskRow, NewItemForm (new
-                                project / new task form)
+      components/teacher/       RosterTable, TaskRow (view/edit a task),
+                                ProjectHeader (view/edit a project),
+                                ItemForm (title + description fields),
+                                NewItemForm ("+ New ..." button + ItemForm)
       pages/admin/              OverviewPage
     frontend/scripts/check-i18n.mjs   locale key parity check
 
@@ -147,8 +150,7 @@ a student logged.
 
 ## Backlog (each is one small, self-contained task)
 
-1. Teachers can't edit a project or task after creating it (only delete).
-   Add `PATCH /projects/{id}` and `PATCH /tasks/{id}` plus an edit form.
+1. Teachers can't reorder tasks within a project (`Task.position`).
 2. Teachers see only hour totals. Add a per-student hours view.
 3. No UI to deactivate a student (`users.active`).
 4. Emit `journal.entry_reviewed` once teachers can review work.

@@ -87,7 +87,10 @@
     "delete": "Delete",
     "deleteProject": "Delete project",
     "confirmDeleteProject": "Delete \"{title}\" and all of its tasks? Students lose their progress on them.",
-    "confirmDeleteTask": "Delete \"{title}\"? Students lose their progress on it."
+    "confirmDeleteTask": "Delete \"{title}\"? Students lose their progress on it.",
+    "edit": "Edit",
+    "save": "Save",
+    "saving": "Saving..."
   },
   "admin": {
     "loadFailed": "Couldn't load the overview. Refresh to try again.",

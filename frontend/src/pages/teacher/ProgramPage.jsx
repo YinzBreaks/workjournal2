@@ -4,6 +4,7 @@ import api, { errorMessage } from "../../lib/api";
 import RosterTable from "../../components/teacher/RosterTable";
 import TaskRow from "../../components/teacher/TaskRow";
 import NewItemForm from "../../components/teacher/NewItemForm";
+import ProjectHeader from "../../components/teacher/ProjectHeader";
 
 // A teacher's program: student hours and every task's progress.
 export default function ProgramPage() {
@@ -60,6 +61,21 @@ export default function ProgramPage() {
     const { data } = await api.post(`/projects/${projectId}/tasks`, fields);
     setProjects((prev) =>
       prev.map((p) => (p.id === projectId ? { ...p, tasks: [...p.tasks, data] } : p))
+    );
+  }
+
+  async function saveProject(project, fields) {
+    const { data } = await api.patch(`/projects/${project.id}`, fields);
+    setProjects((prev) => prev.map((p) => (p.id === data.id ? { ...p, ...data } : p)));
+  }
+
+  async function saveTask(task, fields) {
+    const { data } = await api.patch(`/tasks/${task.id}`, fields);
+    setProjects((prev) =>
+      prev.map((p) => ({
+        ...p,
+        tasks: p.tasks.map((x) => (x.id === data.id ? { ...x, ...data } : x)),
+      }))
     );
   }
 
@@ -125,18 +141,7 @@ export default function ProgramPage() {
           )}
           {projects.map((project) => (
             <section key={project.id}>
-              <div className="flex items-baseline justify-between gap-4">
-                <h3 className="text-lg font-semibold text-gray-900">{project.title}</h3>
-                <button
-                  onClick={() => deleteProject(project)}
-                  className="shrink-0 text-xs text-gray-500 hover:text-red-600"
-                >
-                  {t("teacher.deleteProject")}
-                </button>
-              </div>
-              {project.description && (
-                <p className="text-sm text-gray-500 mb-3">{project.description}</p>
-              )}
+              <ProjectHeader project={project} onSave={saveProject} onDelete={deleteProject} />
               <div className="rounded-lg border border-gray-200 bg-white divide-y divide-gray-100">
                 {project.tasks.map((task) => (
                   <TaskRow
@@ -144,6 +149,7 @@ export default function ProgramPage() {
                     task={task}
                     supportStaff={supportStaff}
                     onStaffChange={updateTaskStaff}
+                    onSave={saveTask}
                     onDelete={deleteTask}
                   />
                 ))}
