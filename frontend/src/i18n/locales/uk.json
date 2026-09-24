@@ -1,6 +1,11 @@
 {
-  "_meta": { "name": "Українська", "dir": "ltr" },
-  "app": { "name": "Beattie Journal" },
+  "_meta": {
+    "name": "Українська",
+    "dir": "ltr"
+  },
+  "app": {
+    "name": "Beattie Journal"
+  },
   "nav": {
     "tasks": "Мої завдання",
     "hours": "Мої години",
@@ -9,7 +14,9 @@
     "signOut": "Вийти",
     "language": "Мова"
   },
-  "common": { "loading": "Завантаження..." },
+  "common": {
+    "loading": "Завантаження..."
+  },
   "auth": {
     "notSignedInTitle": "Ви не ввійшли",
     "notSignedInBody": "Можливо, термін вашого входу в Beattie Tech закінчився.",
@@ -67,7 +74,20 @@
     "getHelp": "+ Отримати допомогу від...",
     "add": "Додати",
     "remove": "Видалити {name}",
-    "addHelpFor": "Додати допомогу для {task}"
+    "addHelpFor": "Додати допомогу для {task}",
+    "newProject": "+ Новий проєкт",
+    "newTask": "+ Додати завдання",
+    "projectTitle": "Назва проєкту",
+    "projectDescription": "Про що цей проєкт? (необов'язково)",
+    "taskTitle": "Завдання",
+    "taskDescription": "Інструкції для учнів (необов'язково)",
+    "create": "Створити",
+    "creating": "Створення...",
+    "cancel": "Скасувати",
+    "delete": "Видалити",
+    "deleteProject": "Видалити проєкт",
+    "confirmDeleteProject": "Видалити «{title}» і всі його завдання? Учні втратять свій прогрес у них.",
+    "confirmDeleteTask": "Видалити «{title}»? Учні втратять свій прогрес у ньому."
   },
   "admin": {
     "loadFailed": "Не вдалося завантажити огляд. Оновіть сторінку та спробуйте ще раз.",

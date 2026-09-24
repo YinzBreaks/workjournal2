@@ -1,6 +1,11 @@
 {
-  "_meta": { "name": "English", "dir": "ltr" },
-  "app": { "name": "Beattie Journal" },
+  "_meta": {
+    "name": "English",
+    "dir": "ltr"
+  },
+  "app": {
+    "name": "Beattie Journal"
+  },
   "nav": {
     "tasks": "My Tasks",
     "hours": "My Hours",
@@ -9,7 +14,9 @@
     "signOut": "Sign out",
     "language": "Language"
   },
-  "common": { "loading": "Loading..." },
+  "common": {
+    "loading": "Loading..."
+  },
   "auth": {
     "notSignedInTitle": "You're not signed in",
     "notSignedInBody": "Your Beattie Tech sign-in may have expired.",
@@ -67,7 +74,20 @@
     "getHelp": "+ Get help from...",
     "add": "Add",
     "remove": "Remove {name}",
-    "addHelpFor": "Add help for {task}"
+    "addHelpFor": "Add help for {task}",
+    "newProject": "+ New project",
+    "newTask": "+ Add a task",
+    "projectTitle": "Project name",
+    "projectDescription": "What is this project about? (optional)",
+    "taskTitle": "Task",
+    "taskDescription": "Instructions for students (optional)",
+    "create": "Create",
+    "creating": "Creating...",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "deleteProject": "Delete project",
+    "confirmDeleteProject": "Delete \"{title}\" and all of its tasks? Students lose their progress on them.",
+    "confirmDeleteTask": "Delete \"{title}\"? Students lose their progress on it."
   },
   "admin": {
     "loadFailed": "Couldn't load the overview. Refresh to try again.",
@@ -76,7 +96,10 @@
     "assistants": "Instructional aides",
     "students": "Students",
     "aides": "IA: {names}",
-    "studentCount": { "one": "{count} student", "other": "{count} students" }
+    "studentCount": {
+      "one": "{count} student",
+      "other": "{count} students"
+    }
   },
   "errors": {
     "generic": "Something went wrong. Try again.",

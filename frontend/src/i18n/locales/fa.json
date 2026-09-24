@@ -1,6 +1,11 @@
 {
-  "_meta": { "name": "فارسی", "dir": "rtl" },
-  "app": { "name": "Beattie Journal" },
+  "_meta": {
+    "name": "فارسی",
+    "dir": "rtl"
+  },
+  "app": {
+    "name": "Beattie Journal"
+  },
   "nav": {
     "tasks": "کارهای من",
     "hours": "ساعت‌های من",
@@ -9,7 +14,9 @@
     "signOut": "خروج",
     "language": "زبان"
   },
-  "common": { "loading": "در حال بارگذاری..." },
+  "common": {
+    "loading": "در حال بارگذاری..."
+  },
   "auth": {
     "notSignedInTitle": "وارد نشده‌اید",
     "notSignedInBody": "ممکن است ورود شما به Beattie Tech منقضی شده باشد.",
@@ -67,7 +74,20 @@
     "getHelp": "+ کمک گرفتن از...",
     "add": "افزودن",
     "remove": "حذف {name}",
-    "addHelpFor": "افزودن کمک برای {task}"
+    "addHelpFor": "افزودن کمک برای {task}",
+    "newProject": "+ پروژه جدید",
+    "newTask": "+ افزودن کار",
+    "projectTitle": "نام پروژه",
+    "projectDescription": "این پروژه درباره چیست؟ (اختیاری)",
+    "taskTitle": "کار",
+    "taskDescription": "دستورالعمل برای دانش‌آموزان (اختیاری)",
+    "create": "ایجاد",
+    "creating": "در حال ایجاد...",
+    "cancel": "لغو",
+    "delete": "حذف",
+    "deleteProject": "حذف پروژه",
+    "confirmDeleteProject": "«{title}» و همه کارهایش حذف شود؟ پیشرفت دانش‌آموزان در آن‌ها از بین می‌رود.",
+    "confirmDeleteTask": "«{title}» حذف شود؟ پیشرفت دانش‌آموزان در آن از بین می‌رود."
   },
   "admin": {
     "loadFailed": "بارگذاری نمای کلی ممکن نشد. صفحه را تازه کنید و دوباره تلاش کنید.",
@@ -76,7 +96,10 @@
     "assistants": "دستیاران آموزشی",
     "students": "دانش‌آموزان",
     "aides": "دستیاران: {names}",
-    "studentCount": { "one": "{count} دانش‌آموز", "other": "{count} دانش‌آموز" }
+    "studentCount": {
+      "one": "{count} دانش‌آموز",
+      "other": "{count} دانش‌آموز"
+    }
   },
   "errors": {
     "generic": "مشکلی پیش آمد. دوباره تلاش کنید.",

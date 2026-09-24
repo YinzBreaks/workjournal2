@@ -32,8 +32,9 @@ async def seed() -> None:
     code = get_settings().CLASS_PROGRAM_CODE
     async with SessionLocal() as db:
         program = await db.scalar(select(Program).where(Program.code == code))
-        if program is None:
-            name = data.PROGRAM["name"] if data.PROGRAM["code"] == code else code
+        new_class = program is None
+        if new_class:
+            name = next((p["name"] for p in data.PROGRAMS if p["code"] == code), code)
             program = Program(code=code, name=name)
             db.add(program)
             await db.flush()
@@ -60,7 +61,10 @@ async def seed() -> None:
                 await db.flush()
             integration[display_name] = staff
 
-        for spec in data.PROJECTS:
+        # Starter work only goes into a brand-new class. After that the
+        # projects belong to the teachers; a restart never re-adds ones
+        # they deleted.
+        for spec in data.PROJECTS if new_class else []:
             project = await db.scalar(
                 select(Project).where(
                     Project.program_id == program.id, Project.title == spec["title"]

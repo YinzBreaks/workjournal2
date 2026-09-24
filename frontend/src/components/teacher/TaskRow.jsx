@@ -4,8 +4,9 @@ import api, { errorMessage } from "../../lib/api";
 import { STATUSES, STATUS_PILL } from "../../lib/status";
 
 // One task in the teacher view: status counts, plus tagging integration
-// staff students can ask for help. onStaffChange(taskId, newStaffList).
-export default function TaskRow({ task, supportStaff, onStaffChange }) {
+// staff students can ask for help. onStaffChange(taskId, newStaffList),
+// onDelete(task) after the teacher confirms.
+export default function TaskRow({ task, supportStaff, onStaffChange, onDelete }) {
   const t = useT();
   const [adding, setAdding] = useState("");
   const [error, setError] = useState("");
@@ -40,12 +41,15 @@ export default function TaskRow({ task, supportStaff, onStaffChange }) {
           <p className="font-medium text-gray-900">{task.title}</p>
           {task.description && <p className="mt-0.5 text-sm text-gray-500">{task.description}</p>}
         </div>
-        <div className="flex shrink-0 gap-2 text-xs font-medium">
+        <div className="flex shrink-0 flex-wrap items-center gap-2 text-xs font-medium">
           {STATUSES.map((status) => (
             <span key={status} className={`rounded-full px-2 py-0.5 ${STATUS_PILL[status]}`}>
               {t("teacher.statCount", { count: task.stats[status], status: t(`status.${status}`) })}
             </span>
           ))}
+          <button onClick={() => onDelete(task)} className="text-gray-500 hover:text-red-600">
+            {t("teacher.delete")}
+          </button>
         </div>
       </div>
 

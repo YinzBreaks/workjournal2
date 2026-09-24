@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useT } from "../../i18n";
-import api from "../../lib/api";
+import api, { errorMessage } from "../../lib/api";
 import RosterTable from "../../components/teacher/RosterTable";
 import TaskRow from "../../components/teacher/TaskRow";
+import NewItemForm from "../../components/teacher/NewItemForm";
 
 // A teacher's program: student hours and every task's progress.
 export default function ProgramPage() {
@@ -50,6 +51,42 @@ export default function ProgramPage() {
     );
   }
 
+  async function createProject(fields) {
+    const { data } = await api.post(`/programs/${programId}/projects`, fields);
+    setProjects((prev) => [...prev, data]);
+  }
+
+  async function createTask(projectId, fields) {
+    const { data } = await api.post(`/projects/${projectId}/tasks`, fields);
+    setProjects((prev) =>
+      prev.map((p) => (p.id === projectId ? { ...p, tasks: [...p.tasks, data] } : p))
+    );
+  }
+
+  async function deleteProject(project) {
+    if (!window.confirm(t("teacher.confirmDeleteProject", { title: project.title }))) return;
+    setError("");
+    try {
+      await api.delete(`/projects/${project.id}`);
+      setProjects((prev) => prev.filter((p) => p.id !== project.id));
+    } catch (err) {
+      setError(errorMessage(err, t));
+    }
+  }
+
+  async function deleteTask(task) {
+    if (!window.confirm(t("teacher.confirmDeleteTask", { title: task.title }))) return;
+    setError("");
+    try {
+      await api.delete(`/tasks/${task.id}`);
+      setProjects((prev) =>
+        prev.map((p) => ({ ...p, tasks: p.tasks.filter((x) => x.id !== task.id) }))
+      );
+    } catch (err) {
+      setError(errorMessage(err, t));
+    }
+  }
+
   if (!loading && programs.length === 0 && !error) {
     return <p className="text-center py-16 text-gray-600">{t("teacher.noProgram")}</p>;
   }
@@ -88,7 +125,15 @@ export default function ProgramPage() {
           )}
           {projects.map((project) => (
             <section key={project.id}>
-              <h3 className="text-lg font-semibold text-gray-900">{project.title}</h3>
+              <div className="flex items-baseline justify-between gap-4">
+                <h3 className="text-lg font-semibold text-gray-900">{project.title}</h3>
+                <button
+                  onClick={() => deleteProject(project)}
+                  className="shrink-0 text-xs text-gray-500 hover:text-red-600"
+                >
+                  {t("teacher.deleteProject")}
+                </button>
+              </div>
               {project.description && (
                 <p className="text-sm text-gray-500 mb-3">{project.description}</p>
               )}
@@ -99,11 +144,29 @@ export default function ProgramPage() {
                     task={task}
                     supportStaff={supportStaff}
                     onStaffChange={updateTaskStaff}
+                    onDelete={deleteTask}
                   />
                 ))}
+                <div className="p-4">
+                  <NewItemForm
+                    openLabel={t("teacher.newTask")}
+                    titleLabel={t("teacher.taskTitle")}
+                    descriptionLabel={t("teacher.taskDescription")}
+                    onSubmit={(fields) => createTask(project.id, fields)}
+                  />
+                </div>
               </div>
             </section>
           ))}
+
+          <div className="rounded-lg border border-dashed border-gray-300 bg-white p-4">
+            <NewItemForm
+              openLabel={t("teacher.newProject")}
+              titleLabel={t("teacher.projectTitle")}
+              descriptionLabel={t("teacher.projectDescription")}
+              onSubmit={createProject}
+            />
+          </div>
         </>
       )}
     </div>

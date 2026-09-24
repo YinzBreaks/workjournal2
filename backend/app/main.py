@@ -7,7 +7,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.routers import admin, assignments, auth, programs, tasks, worklogs
+from app.routers import admin, assignments, auth, programs, projects, tasks, worklogs
 
 MAX_BODY_BYTES = 16 * 1024
 
@@ -39,7 +39,7 @@ async def health():
     return {"status": "ok"}
 
 
-for module in (auth, programs, assignments, worklogs, tasks, admin):
+for module in (auth, programs, projects, assignments, worklogs, tasks, admin):
     api.include_router(module.router)
 
 app.include_router(api)
