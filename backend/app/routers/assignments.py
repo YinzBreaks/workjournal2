@@ -1,11 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_db
+from app.errors import not_found
 from app.models import Assignment, User, UserRole
+from app.ratelimit import limit_writes
 from app.schemas import AssignmentOut, AssignmentUpdateIn, staff_out
-from app.security import ensure_program_access, get_current_user, require_role
+from app.security import ensure_program_access, require_role
 
 router = APIRouter(prefix="/assignments", tags=["assignments"])
 
@@ -40,17 +42,18 @@ async def my_assignments(
 async def update_assignment(
     assignment_id: int,
     body: AssignmentUpdateIn,
-    user: User = Depends(get_current_user),
+    user: User = Depends(limit_writes),
     db: AsyncSession = Depends(get_db),
 ):
     """Move a task between Not started / In progress / Complete."""
     assignment = await db.get(Assignment, assignment_id)
     if assignment is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found.")
+        raise not_found()
 
     if user.role == UserRole.student:
+        # 404, not 403: don't reveal that someone else's assignment exists.
         if assignment.student_id != user.id:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found.")
+            raise not_found()
     else:
         await ensure_program_access(db, user, assignment.task.project.program_id)
 

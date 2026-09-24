@@ -1,10 +1,12 @@
 import { useState } from "react";
-import api from "../../lib/api";
-import { STATUSES, STATUS_LABEL, STATUS_PILL } from "../../lib/status";
+import { useT } from "../../i18n";
+import api, { errorMessage } from "../../lib/api";
+import { STATUSES, STATUS_PILL } from "../../lib/status";
 
 // One task in the teacher view: status counts, plus tagging integration
 // staff students can ask for help. onStaffChange(taskId, newStaffList).
 export default function TaskRow({ task, supportStaff, onStaffChange }) {
+  const t = useT();
   const [adding, setAdding] = useState("");
   const [error, setError] = useState("");
 
@@ -14,8 +16,8 @@ export default function TaskRow({ task, supportStaff, onStaffChange }) {
       const { data } = await api.post(`/tasks/${task.id}/support-staff`, { staff_id: Number(staffId) });
       onStaffChange(task.id, data);
       setAdding("");
-    } catch {
-      setError("Couldn't add that person.");
+    } catch (err) {
+      setError(errorMessage(err, t));
     }
   }
 
@@ -24,8 +26,8 @@ export default function TaskRow({ task, supportStaff, onStaffChange }) {
     try {
       const { data } = await api.delete(`/tasks/${task.id}/support-staff/${staffId}`);
       onStaffChange(task.id, data);
-    } catch {
-      setError("Couldn't remove that person.");
+    } catch (err) {
+      setError(errorMessage(err, t));
     }
   }
 
@@ -41,7 +43,7 @@ export default function TaskRow({ task, supportStaff, onStaffChange }) {
         <div className="flex shrink-0 gap-2 text-xs font-medium">
           {STATUSES.map((status) => (
             <span key={status} className={`rounded-full px-2 py-0.5 ${STATUS_PILL[status]}`}>
-              {task.stats[status]} {STATUS_LABEL[status].toLowerCase()}
+              {t("teacher.statCount", { count: task.stats[status], status: t(`status.${status}`) })}
             </span>
           ))}
         </div>
@@ -51,13 +53,13 @@ export default function TaskRow({ task, supportStaff, onStaffChange }) {
         {task.support_staff.map((staff) => (
           <span
             key={staff.id}
-            className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 py-1 pl-2.5 pr-1.5 text-xs font-medium text-brand-700"
+            className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 py-1 ps-2.5 pe-1.5 text-xs font-medium text-brand-700"
           >
             {staff.name} ({staff.title})
             <button
               onClick={() => untag(staff.id)}
               className="flex h-4 w-4 items-center justify-center rounded-full hover:bg-brand-100"
-              aria-label={`Remove ${staff.name}`}
+              aria-label={t("teacher.remove", { name: staff.name })}
             >
               &times;
             </button>
@@ -69,10 +71,10 @@ export default function TaskRow({ task, supportStaff, onStaffChange }) {
             <select
               value={adding}
               onChange={(e) => setAdding(e.target.value)}
-              aria-label={`Add help for ${task.title}`}
+              aria-label={t("teacher.addHelpFor", { task: task.title })}
               className="rounded-full border border-gray-300 px-2 py-1 text-xs text-gray-600 focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
             >
-              <option value="">+ Get help from...</option>
+              <option value="">{t("teacher.getHelp")}</option>
               {available.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.name} ({s.title})
@@ -84,7 +86,7 @@ export default function TaskRow({ task, supportStaff, onStaffChange }) {
                 onClick={() => tag(adding)}
                 className="text-xs font-medium text-brand-600 hover:text-brand-700"
               >
-                Add
+                {t("teacher.add")}
               </button>
             )}
           </>

@@ -1,0 +1,95 @@
+{
+  "_meta": { "name": "English", "dir": "ltr" },
+  "app": { "name": "Beattie Journal" },
+  "nav": {
+    "tasks": "My Tasks",
+    "hours": "My Hours",
+    "class": "My Class",
+    "overview": "Overview",
+    "signOut": "Sign out",
+    "language": "Language"
+  },
+  "common": { "loading": "Loading..." },
+  "auth": {
+    "notSignedInTitle": "You're not signed in",
+    "notSignedInBody": "Your Beattie Tech sign-in may have expired.",
+    "signIn": "Sign in again",
+    "disabledTitle": "Your journal access is turned off",
+    "disabledBody": "Ask your teacher to turn it back on.",
+    "loadFailed": "Couldn't reach the journal. Refresh to try again."
+  },
+  "status": {
+    "not_started": "Not started",
+    "in_progress": "In progress",
+    "complete": "Complete"
+  },
+  "tasks": {
+    "title": "My Tasks",
+    "loadFailed": "Couldn't load your tasks. Refresh to try again.",
+    "empty": "You don't have any tasks yet.",
+    "emptyHint": "They'll show up here once your teacher adds them.",
+    "position": "Task {current} of {total}",
+    "previous": "Previous",
+    "next": "Next",
+    "due": "Due {date}",
+    "askFor": "Need help? Ask {name} ({title})",
+    "start": "Start",
+    "markComplete": "Mark complete",
+    "backToNotStarted": "Not started",
+    "reopen": "Reopen"
+  },
+  "hours": {
+    "title": "My Hours",
+    "total": "Total: {total}",
+    "loadFailed": "Couldn't load your hours. Refresh to try again.",
+    "confirmDelete": "Delete {time} on {date}?",
+    "notEnrolled": "You're not in a class yet, so you can't log hours.",
+    "none": "No hours logged yet.",
+    "delete": "Delete",
+    "program": "Program",
+    "date": "Date",
+    "hours": "Hours",
+    "hoursPlaceholder": "e.g. 2.5",
+    "summary": "What did you work on?",
+    "save": "Log hours",
+    "saving": "Saving..."
+  },
+  "teacher": {
+    "fallbackTitle": "My Class",
+    "program": "Program",
+    "loadFailed": "Couldn't load your class. Refresh to try again.",
+    "noProgram": "You're not linked to a class yet.",
+    "noProjects": "No projects in this class yet.",
+    "students": "Students ({count})",
+    "noStudents": "No students yet. Each student is added the first time they sign in.",
+    "logged": "{time} logged",
+    "statCount": "{count} {status}",
+    "getHelp": "+ Get help from...",
+    "add": "Add",
+    "remove": "Remove {name}",
+    "addHelpFor": "Add help for {task}"
+  },
+  "admin": {
+    "loadFailed": "Couldn't load the overview. Refresh to try again.",
+    "programs": "Programs",
+    "instructors": "Instructors",
+    "assistants": "Instructional aides",
+    "students": "Students",
+    "aides": "IA: {names}",
+    "studentCount": { "one": "{count} student", "other": "{count} students" }
+  },
+  "errors": {
+    "generic": "Something went wrong. Try again.",
+    "network": "Couldn't reach the journal. Check your connection.",
+    "not_signed_in": "You're not signed in.",
+    "account_disabled": "Your journal access is turned off.",
+    "forbidden": "You don't have access to that.",
+    "not_found": "That item doesn't exist anymore.",
+    "rate_limited": "That's a lot of changes at once. Wait a minute and try again.",
+    "invalid_request": "Something in that form isn't right. Check it and try again.",
+    "too_large": "That's too much text. Shorten it and try again.",
+    "not_enrolled": "You're not in that class.",
+    "future_date": "You can't log hours for a future date.",
+    "integration_only": "Only integration staff can be added to a task."
+  }
+}

@@ -4,17 +4,14 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    # Required. No fallback: the app refuses to boot without it.
     DATABASE_URL: str
-    SECRET_KEY: str
 
-    # One school day, so a student signs in once per session.
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 720
+    # The one program this deployment serves (a code from seed_data.PROGRAMS).
+    CLASS_PROGRAM_CODE: str = "NETWORK-CYBER"
 
-    # Used only by `python -m app.seed`.
-    ADMIN_USER: str = "admin"
-    ADMIN_PASS: str = ""
-    DEFAULT_STAFF_PASSWORD: str = ""
-    DEFAULT_STUDENT_PIN: str = ""
+    # Where "Sign out" sends people: the Authelia portal's logout page.
+    AUTHELIA_LOGOUT_URL: str = "https://auth.beattietech.local/logout"
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 

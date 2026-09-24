@@ -1,11 +1,13 @@
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_db
+from app.errors import bad_request, not_found
 from app.models import ProgramStudent, User, UserRole, WorkLog
+from app.ratelimit import limit_writes
 from app.schemas import WorkLogIn, WorkLogOut
 from app.security import require_role
 
@@ -39,19 +41,14 @@ async def my_worklogs(user: User = Depends(student_only), db: AsyncSession = Dep
 async def create_worklog(
     body: WorkLogIn,
     user: User = Depends(student_only),
+    _: User = Depends(limit_writes),
     db: AsyncSession = Depends(get_db),
 ):
     enrolled = await db.get(ProgramStudent, (body.program_id, user.id))
     if enrolled is None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="You're not enrolled in that program.",
-        )
+        raise bad_request("not_enrolled")
     if body.date > date.today():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="You can't log hours for a future date.",
-        )
+        raise bad_request("future_date")
 
     log = WorkLog(student_id=user.id, **body.model_dump())
     db.add(log)
@@ -64,11 +61,12 @@ async def create_worklog(
 async def delete_worklog(
     log_id: int,
     user: User = Depends(student_only),
+    _: User = Depends(limit_writes),
     db: AsyncSession = Depends(get_db),
 ):
     log = await db.get(WorkLog, log_id)
     if log is None or log.student_id != user.id:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Entry not found.")
+        raise not_found()
     await db.delete(log)
     await db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)

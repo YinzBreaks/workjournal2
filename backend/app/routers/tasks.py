@@ -1,11 +1,13 @@
 """Tagging school-wide support staff ("ask Jen Groomes for math help") on a task."""
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_db
+from app.errors import bad_request, not_found
 from app.models import Staff, StaffKind, Task, User, UserRole
+from app.ratelimit import limit_writes
 from app.schemas import StaffOut, TagStaffIn, staff_out
 from app.security import ensure_program_access, get_current_user, require_role
 
@@ -19,14 +21,14 @@ async def list_support_staff(
     user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
 ):
     result = await db.scalars(select(Staff).where(Staff.kind == StaffKind.integration))
-    staff = sorted(result.unique().all(), key=lambda s: (s.user.last_name, s.user.first_name))
+    staff = sorted(result.unique().all(), key=lambda s: s.user.display_name)
     return [staff_out(s) for s in staff]
 
 
 async def _task_for(db: AsyncSession, user: User, task_id: int) -> Task:
     task = await db.get(Task, task_id)
     if task is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found.")
+        raise not_found()
     await ensure_program_access(db, user, task.project.program_id)
     return task
 
@@ -36,15 +38,13 @@ async def tag_support_staff(
     task_id: int,
     body: TagStaffIn,
     user: User = Depends(staff_only),
+    _: User = Depends(limit_writes),
     db: AsyncSession = Depends(get_db),
 ):
     task = await _task_for(db, user, task_id)
     staff = await db.get(Staff, body.staff_id)
     if staff is None or staff.kind != StaffKind.integration:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Only integration staff can be tagged on a task.",
-        )
+        raise bad_request("integration_only")
     if all(s.id != staff.id for s in task.support_staff):
         task.support_staff.append(staff)
         await db.commit()
@@ -56,6 +56,7 @@ async def untag_support_staff(
     task_id: int,
     staff_id: int,
     user: User = Depends(staff_only),
+    _: User = Depends(limit_writes),
     db: AsyncSession = Depends(get_db),
 ):
     task = await _task_for(db, user, task_id)

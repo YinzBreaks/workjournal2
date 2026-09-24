@@ -50,23 +50,24 @@ class AssignmentStatus(str, enum.Enum):
 
 
 class User(Base):
+    """Someone who has signed in through Authelia. Created on first visit.
+
+    `username`, `display_name`, `email`, and `role` mirror the Authelia
+    headers and are refreshed on every request (see provisioning.py).
+    """
+
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str] = mapped_column(String(150), unique=True)
-    # Staff: bcrypt of their password. Students: bcrypt of their PIN.
-    password_hash: Mapped[str] = mapped_column(String(255))
-    first_name: Mapped[str] = mapped_column(String(150))
-    last_name: Mapped[str] = mapped_column(String(150), default="")
+    display_name: Mapped[str] = mapped_column(String(255))
+    email: Mapped[str] = mapped_column(String(255))
     role: Mapped[UserRole] = mapped_column(Enum(UserRole, name="user_role"))
+    # Set false to lock someone out of this app without touching Authelia.
     active: Mapped[bool] = mapped_column(Boolean, default=True, server_default=true())
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
-
-    @property
-    def full_name(self) -> str:
-        return f"{self.first_name} {self.last_name}".strip()
 
 
 class Staff(Base):

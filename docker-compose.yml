@@ -1,0 +1,47 @@
+services:
+  journal:
+    build: .
+    container_name: beattie-journal
+    restart: unless-stopped
+    # JOURNAL_DB_PASSWORD (required) and optional overrides live in .env
+    # beside this file and are never committed. See .env.example.
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://journal:${JOURNAL_DB_PASSWORD:?set JOURNAL_DB_PASSWORD in .env}@journal-db:5432/journal
+    depends_on:
+      journal-db:
+        condition: service_healthy
+    networks:
+      - beattie
+      - journal-internal
+    expose:
+      - "8000"
+
+  journal-db:
+    image: postgres:16-alpine
+    container_name: beattie-journal-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=journal
+      - POSTGRES_DB=journal
+      - POSTGRES_PASSWORD=${JOURNAL_DB_PASSWORD:?set JOURNAL_DB_PASSWORD in .env}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U journal -d journal"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - journal-db:/var/lib/postgresql/data
+    # Database is reachable only by the journal container, never by Caddy.
+    networks:
+      - journal-internal
+
+networks:
+  beattie:
+    external: true
+  journal-internal:
+
+volumes:
+  journal-db:

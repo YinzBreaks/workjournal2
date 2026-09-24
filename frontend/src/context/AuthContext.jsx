@@ -1,50 +1,60 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import api, { clearToken, getToken, setToken } from "../lib/api";
+import api from "../lib/api";
+import { useT } from "../i18n";
 
 const AuthContext = createContext(null);
 
-// `user` is { id, name, role } from GET /api/auth/me, or null when signed out.
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(() => Boolean(getToken()));
+function Notice({ title, body, action }) {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+      <div className="max-w-sm text-center">
+        <h1 className="text-lg font-semibold text-gray-900">{title}</h1>
+        {body && <p className="mt-2 text-sm text-gray-600">{body}</p>}
+        {action}
+      </div>
+    </div>
+  );
+}
 
-  // Restore a session after a page reload.
+// `user` is { id, name, role, logout_url } from GET /api/auth/me. Sign-in
+// happens in Authelia before this app ever loads, so there's no login page:
+// if /auth/me fails, the Authelia session is missing, expired, or disabled.
+export function AuthProvider({ children }) {
+  const t = useT();
+  const [user, setUser] = useState(null);
+  const [problem, setProblem] = useState(null);
+
   useEffect(() => {
-    if (!getToken()) return;
     api
       .get("/auth/me")
       .then(({ data }) => setUser(data))
-      .catch(() => clearToken())
-      .finally(() => setLoading(false));
+      .catch((error) => setProblem(error.response?.data?.detail ?? "network"));
   }, []);
 
-  async function login(token) {
-    setToken(token);
-    try {
-      const { data } = await api.get("/auth/me");
-      setUser(data);
-    } catch (error) {
-      clearToken();
-      throw error;
-    }
+  if (problem === "account_disabled") {
+    return <Notice title={t("auth.disabledTitle")} body={t("auth.disabledBody")} />;
   }
-
-  function logout() {
-    clearToken();
-    setUser(null);
-  }
-
-  if (loading) {
+  if (problem === "not_signed_in") {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600" />
-      </div>
+      <Notice
+        title={t("auth.notSignedInTitle")}
+        body={t("auth.notSignedInBody")}
+        action={
+          // A full reload goes back through Caddy, which sends them to Authelia.
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
+          >
+            {t("auth.signIn")}
+          </button>
+        }
+      />
     );
   }
+  if (problem) return <Notice title={t("auth.loadFailed")} />;
+  if (!user) return <Notice title={t("common.loading")} />;
 
-  return (
-    <AuthContext.Provider value={{ user, login, logout }}>{children}</AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={{ user }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

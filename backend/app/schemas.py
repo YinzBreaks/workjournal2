@@ -10,25 +10,17 @@ from app.models import AssignmentStatus, Staff, UserRole
 # --- Auth ---
 
 
-class LoginIn(BaseModel):
-    username: str
-    password: str
-
-
-class PinLoginIn(BaseModel):
-    student_id: int
-    pin: str
-
-
-class TokenOut(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-
-
 class MeOut(BaseModel):
     id: int
     name: str
     role: UserRole
+    logout_url: str
+
+
+class StrictIn(BaseModel):
+    """Base for every request body: unknown fields are rejected, not ignored."""
+
+    model_config = ConfigDict(extra="forbid")
 
 
 # --- Shared ---
@@ -42,11 +34,6 @@ class ProgramOut(BaseModel):
     name: str
 
 
-class PersonOut(BaseModel):
-    id: int
-    name: str
-
-
 class StaffOut(BaseModel):
     id: int
     name: str
@@ -54,7 +41,7 @@ class StaffOut(BaseModel):
 
 
 def staff_out(staff: Staff) -> StaffOut:
-    return StaffOut(id=staff.id, name=staff.user.full_name, title=staff.title)
+    return StaffOut(id=staff.id, name=staff.user.display_name, title=staff.title)
 
 
 # --- Student: assignments ---
@@ -72,14 +59,14 @@ class AssignmentOut(BaseModel):
     support_staff: list[StaffOut]
 
 
-class AssignmentUpdateIn(BaseModel):
+class AssignmentUpdateIn(StrictIn):
     status: AssignmentStatus
 
 
 # --- Student: hours ---
 
 
-class WorkLogIn(BaseModel):
+class WorkLogIn(StrictIn):
     program_id: int
     date: dt.date
     minutes: int = Field(ge=1, le=720)
@@ -125,7 +112,7 @@ class ProgramProjectOut(BaseModel):
     tasks: list[ProgramTaskOut]
 
 
-class TagStaffIn(BaseModel):
+class TagStaffIn(StrictIn):
     staff_id: int
 
 

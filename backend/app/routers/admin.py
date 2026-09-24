@@ -48,8 +48,8 @@ async def programs_summary(user: User = Depends(admin_only), db: AsyncSession = 
             id=p.id,
             code=p.code,
             name=p.name,
-            instructors=[s.user.full_name for s in p.staff if s.kind == StaffKind.instructor],
-            assistants=[s.user.full_name for s in p.staff if s.kind == StaffKind.assistant],
+            instructors=[s.user.display_name for s in p.staff if s.kind == StaffKind.instructor],
+            assistants=[s.user.display_name for s in p.staff if s.kind == StaffKind.assistant],
             student_count=student_counts.get(p.id, 0),
         )
         for p in programs

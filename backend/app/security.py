@@ -1,75 +1,77 @@
-"""Passwords, access tokens, and the "who is calling" dependencies."""
+"""Who is calling, and what they're allowed to touch.
 
-from datetime import datetime, timedelta, timezone
+Identity comes ONLY from the headers Caddy injects after Authelia forward
+auth (same contract as beattieNetTrack's src/lib/auth.ts). Caddy strips any
+client-supplied copies of these headers at the edge, and this container is
+only reachable on the internal `beattie` Docker network, never published.
+Never read a user id or role from a request body, query, or path.
+"""
 
-import bcrypt
-import jwt
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from dataclasses import dataclass
+
+from fastapi import Depends, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config import get_settings
 from app.db import get_db
+from app.errors import account_disabled, forbidden, not_signed_in
 from app.models import ProgramStaff, Staff, User, UserRole
-
-ALGORITHM = "HS256"
-bearer = HTTPBearer(auto_error=False)
+from app.provisioning import sync_user
 
 
-def hash_password(password: str) -> str:
-    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+@dataclass(frozen=True)
+class Identity:
+    username: str
+    name: str
+    email: str
+    groups: frozenset[str]
+
+    @property
+    def role(self) -> UserRole:
+        if "admins" in self.groups:
+            return UserRole.admin
+        if "teachers" in self.groups:
+            return UserRole.teacher
+        return UserRole.student
 
 
-def verify_password(password: str, password_hash: str) -> bool:
-    if not password_hash:
-        return False
-    return bcrypt.checkpw(password.encode(), password_hash.encode())
+def _header(request: Request, name: str) -> str:
+    return (
+        request.headers.get(f"remote-{name}")
+        or request.headers.get(f"x-forwarded-{name}")
+        or ""
+    ).strip()
 
 
-def create_access_token(user: User) -> str:
-    settings = get_settings()
-    expires = datetime.now(timezone.utc) + timedelta(
-        minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+def read_identity(request: Request) -> Identity | None:
+    username = _header(request, "user")
+    if not username:
+        return None
+    groups = frozenset(
+        g.strip().lower() for g in _header(request, "groups").split(",") if g.strip()
     )
-    payload = {"sub": str(user.id), "role": user.role.value, "exp": expires}
-    return jwt.encode(payload, settings.SECRET_KEY, algorithm=ALGORITHM)
-
-
-def _unauthorized() -> HTTPException:
-    return HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED, detail="Your session has ended. Sign in again."
+    return Identity(
+        username=username,
+        name=_header(request, "name") or username[:1].upper() + username[1:],
+        email=_header(request, "email") or f"{username}@beattietech.local",
+        groups=groups,
     )
 
 
-async def get_current_user(
-    credentials: HTTPAuthorizationCredentials | None = Depends(bearer),
-    db: AsyncSession = Depends(get_db),
-) -> User:
-    if credentials is None:
-        raise _unauthorized()
-    try:
-        payload = jwt.decode(
-            credentials.credentials, get_settings().SECRET_KEY, algorithms=[ALGORITHM]
-        )
-        user_id = int(payload["sub"])
-    except (jwt.PyJWTError, KeyError, ValueError):
-        raise _unauthorized()
-
-    # Looked up every request so deactivating a user signs them out.
-    user = await db.get(User, user_id)
-    if user is None or not user.active:
-        raise _unauthorized()
+async def get_current_user(request: Request, db: AsyncSession = Depends(get_db)) -> User:
+    identity = read_identity(request)
+    if identity is None:
+        raise not_signed_in()
+    user = await sync_user(db, identity)
+    if not user.active:
+        raise account_disabled()
     return user
 
 
 def require_role(*roles: UserRole):
     async def checker(user: User = Depends(get_current_user)) -> User:
         if user.role not in roles:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have access to this.",
-            )
+            raise forbidden()
         return user
 
     return checker
@@ -87,7 +89,4 @@ async def ensure_program_access(db: AsyncSession, user: User, program_id: int) -
         )
         if link is not None:
             return
-    raise HTTPException(
-        status_code=status.HTTP_403_FORBIDDEN,
-        detail="You don't have access to this program.",
-    )
+    raise forbidden()

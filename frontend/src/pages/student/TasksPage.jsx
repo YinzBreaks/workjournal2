@@ -1,67 +1,92 @@
 import { useEffect, useState } from "react";
-import api from "../../lib/api";
-import { STATUSES, STATUS_LABEL } from "../../lib/status";
+import { useT } from "../../i18n";
+import api, { errorMessage } from "../../lib/api";
+import { emitHubEvent } from "../../lib/hub";
 import AssignmentCard from "../../components/student/AssignmentCard";
 
-// The student's task board: one column per status.
+// One task on screen at a time (progressive disclosure), starting at the
+// first one that isn't complete. Previous/Next step through the rest.
 export default function TasksPage() {
+  const t = useT();
   const [assignments, setAssignments] = useState([]);
+  const [index, setIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     api
       .get("/assignments")
-      .then(({ data }) => setAssignments(data))
-      .catch(() => setError("Couldn't load your tasks. Refresh to try again."))
+      .then(({ data }) => {
+        setAssignments(data);
+        const firstOpen = data.findIndex((a) => a.status !== "complete");
+        setIndex(firstOpen === -1 ? 0 : firstOpen);
+      })
+      .catch(() => setError(t("tasks.loadFailed")))
       .finally(() => setLoading(false));
-  }, []);
+  }, [t]);
 
   async function moveTo(assignmentId, status) {
     setError("");
     try {
       const { data } = await api.patch(`/assignments/${assignmentId}`, { status });
       setAssignments((prev) => prev.map((a) => (a.id === data.id ? data : a)));
-    } catch {
-      setError("Couldn't move that task. Try again.");
+      if (status === "complete") {
+        emitHubEvent("journal.entry_submitted", {
+          contentId: `assignment-${data.id}`,
+          title: data.task_title,
+        });
+      }
+    } catch (err) {
+      setError(errorMessage(err, t));
     }
   }
 
-  if (loading) return <p className="text-sm text-gray-500">Loading your tasks...</p>;
+  if (loading) return <p className="text-sm text-gray-500">{t("common.loading")}</p>;
+
+  if (assignments.length === 0) {
+    return (
+      <div className="text-center py-16">
+        {error ? (
+          <p className="text-sm text-red-600">{error}</p>
+        ) : (
+          <>
+            <p className="text-gray-600">{t("tasks.empty")}</p>
+            <p className="text-sm text-gray-500 mt-1">{t("tasks.emptyHint")}</p>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  const current = assignments[index];
+  const navButton =
+    "rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40";
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-semibold text-gray-900">My Tasks</h2>
+    <div className="mx-auto max-w-2xl space-y-4">
+      <div className="flex items-baseline justify-between gap-4">
+        <h2 className="text-xl font-semibold text-gray-900">{t("tasks.title")}</h2>
+        <p className="text-sm text-gray-500">
+          {t("tasks.position", { current: index + 1, total: assignments.length })}
+        </p>
+      </div>
+
       {error && <p className="text-sm text-red-600">{error}</p>}
 
-      {assignments.length === 0 && !error ? (
-        <div className="text-center py-16">
-          <p className="text-gray-600">You don't have any tasks yet.</p>
-          <p className="text-sm text-gray-400 mt-1">They'll show up here once your teacher assigns them.</p>
-        </div>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-3">
-          {STATUSES.map((status) => {
-            const column = assignments.filter((a) => a.status === status);
-            return (
-              <section key={status} className="rounded-lg bg-gray-100 p-3">
-                <h3 className="flex items-center justify-between text-sm font-semibold text-gray-700">
-                  {STATUS_LABEL[status]}
-                  <span className="text-xs font-medium text-gray-500">{column.length}</span>
-                </h3>
-                <div className="mt-3 space-y-3">
-                  {column.map((a) => (
-                    <AssignmentCard key={a.id} assignment={a} onMove={moveTo} />
-                  ))}
-                  {column.length === 0 && (
-                    <p className="text-xs text-gray-400 text-center py-4">Nothing here</p>
-                  )}
-                </div>
-              </section>
-            );
-          })}
-        </div>
-      )}
+      <AssignmentCard key={current.id} assignment={current} onMove={moveTo} />
+
+      <div className="flex justify-between">
+        <button onClick={() => setIndex(index - 1)} disabled={index === 0} className={navButton}>
+          {t("tasks.previous")}
+        </button>
+        <button
+          onClick={() => setIndex(index + 1)}
+          disabled={index === assignments.length - 1}
+          className={navButton}
+        >
+          {t("tasks.next")}
+        </button>
+      </div>
     </div>
   );
 }

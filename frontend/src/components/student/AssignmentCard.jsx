@@ -1,23 +1,25 @@
 import { useState } from "react";
+import { useI18n } from "../../i18n";
 import { formatDate } from "../../lib/format";
 
-// Buttons shown for each status: [label, status it moves to, primary?].
+// Buttons shown for each status: [label key, status it moves to, primary?].
 const MOVES = {
-  not_started: [["Start", "in_progress", true]],
+  not_started: [["tasks.start", "in_progress", true]],
   in_progress: [
-    ["Not started", "not_started", false],
-    ["Mark complete", "complete", true],
+    ["tasks.backToNotStarted", "not_started", false],
+    ["tasks.markComplete", "complete", true],
   ],
-  complete: [["Reopen", "in_progress", false]],
+  complete: [["tasks.reopen", "in_progress", false]],
 };
 
 const PRIMARY =
-  "rounded-md bg-brand-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-brand-700 disabled:opacity-50";
+  "rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50";
 const SECONDARY =
-  "rounded-md border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50";
+  "rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50";
 
-// One task on the student's board. onMove(assignmentId, newStatus).
+// The one task on the student's screen. onMove(assignmentId, newStatus).
 export default function AssignmentCard({ assignment, onMove }) {
+  const { locale, t } = useI18n();
   const [busy, setBusy] = useState(false);
 
   async function move(status) {
@@ -27,32 +29,27 @@ export default function AssignmentCard({ assignment, onMove }) {
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
-      <p className="text-xs text-gray-500">
-        {assignment.program_name} &middot; {assignment.project_title}
+    <div className="rounded-lg border border-gray-200 bg-white p-6">
+      <p className="text-sm text-gray-500">
+        {assignment.project_title} &middot; {t(`status.${assignment.status}`)}
       </p>
-      <p className="mt-1 font-medium text-gray-900">{assignment.task_title}</p>
+      <h3 className="mt-2 text-xl font-semibold text-gray-900">{assignment.task_title}</h3>
       {assignment.task_description && (
-        <p className="mt-0.5 text-sm text-gray-500">{assignment.task_description}</p>
+        <p className="mt-2 text-gray-600">{assignment.task_description}</p>
       )}
       {assignment.due_date && assignment.status !== "complete" && (
-        <p className="mt-1 text-xs text-gray-400">Due {formatDate(assignment.due_date)}</p>
+        <p className="mt-2 text-sm text-gray-500">
+          {t("tasks.due", { date: formatDate(assignment.due_date, locale) })}
+        </p>
       )}
 
-      {assignment.support_staff.length > 0 && (
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          {assignment.support_staff.map((staff) => (
-            <span
-              key={staff.id}
-              className="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700"
-            >
-              Need help? Ask {staff.name} ({staff.title})
-            </span>
-          ))}
-        </div>
-      )}
+      {assignment.support_staff.map((staff) => (
+        <p key={staff.id} className="mt-3 text-sm text-brand-700">
+          {t("tasks.askFor", { name: staff.name, title: staff.title })}
+        </p>
+      ))}
 
-      <div className="mt-3 flex flex-wrap gap-2">
+      <div className="mt-6 flex flex-wrap gap-3">
         {MOVES[assignment.status].map(([label, status, primary]) => (
           <button
             key={status}
@@ -60,7 +57,7 @@ export default function AssignmentCard({ assignment, onMove }) {
             disabled={busy}
             className={primary ? PRIMARY : SECONDARY}
           >
-            {label}
+            {t(label)}
           </button>
         ))}
       </div>

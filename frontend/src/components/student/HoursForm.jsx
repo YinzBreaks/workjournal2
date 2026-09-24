@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { useT } from "../../i18n";
 import api, { errorMessage } from "../../lib/api";
+import { emitHubEvent } from "../../lib/hub";
 import { todayISO } from "../../lib/format";
 
 const inputClass =
@@ -7,6 +9,7 @@ const inputClass =
 
 // Log time for one day. onCreated(newLog) after the server saves it.
 export default function HoursForm({ programs, onCreated }) {
+  const t = useT();
   const [programId, setProgramId] = useState(String(programs[0].id));
   const [date, setDate] = useState(todayISO());
   const [hours, setHours] = useState("");
@@ -26,10 +29,11 @@ export default function HoursForm({ programs, onCreated }) {
         summary: summary.trim(),
       });
       onCreated(data);
+      emitHubEvent("journal.entry_created", { contentId: `worklog-${data.id}`, minutes: data.minutes });
       setHours("");
       setSummary("");
     } catch (err) {
-      setError(errorMessage(err, "Couldn't save those hours. Check the date and hours."));
+      setError(errorMessage(err, t));
     } finally {
       setSaving(false);
     }
@@ -41,7 +45,7 @@ export default function HoursForm({ programs, onCreated }) {
         {programs.length > 1 && (
           <div>
             <label htmlFor="hours-program" className="block text-sm font-medium text-gray-700 mb-1">
-              Program
+              {t("hours.program")}
             </label>
             <select
               id="hours-program"
@@ -59,7 +63,7 @@ export default function HoursForm({ programs, onCreated }) {
         )}
         <div>
           <label htmlFor="hours-date" className="block text-sm font-medium text-gray-700 mb-1">
-            Date
+            {t("hours.date")}
           </label>
           <input
             id="hours-date"
@@ -73,7 +77,7 @@ export default function HoursForm({ programs, onCreated }) {
         </div>
         <div>
           <label htmlFor="hours-amount" className="block text-sm font-medium text-gray-700 mb-1">
-            Hours
+            {t("hours.hours")}
           </label>
           <input
             id="hours-amount"
@@ -83,7 +87,7 @@ export default function HoursForm({ programs, onCreated }) {
             step="0.25"
             value={hours}
             onChange={(e) => setHours(e.target.value)}
-            placeholder="e.g. 2.5"
+            placeholder={t("hours.hoursPlaceholder")}
             required
             className={inputClass}
           />
@@ -92,7 +96,7 @@ export default function HoursForm({ programs, onCreated }) {
 
       <div>
         <label htmlFor="hours-summary" className="block text-sm font-medium text-gray-700 mb-1">
-          What did you work on?
+          {t("hours.summary")}
         </label>
         <textarea
           id="hours-summary"
@@ -111,7 +115,7 @@ export default function HoursForm({ programs, onCreated }) {
         disabled={saving}
         className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-700 disabled:opacity-50"
       >
-        {saving ? "Saving..." : "Log hours"}
+        {saving ? t("hours.saving") : t("hours.save")}
       </button>
     </form>
   );
