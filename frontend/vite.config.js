@@ -1,20 +1,13 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import path from "path";
 
+// In dev, /api is forwarded to the FastAPI server so the browser only ever
+// talks to one origin. In production, a reverse proxy does the same job.
 export default defineConfig({
   plugins: [react()],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
-  },
   server: {
     proxy: {
-      "/api": {
-        target: "http://localhost:8000",
-        changeOrigin: true,
-      },
+      "/api": "http://localhost:8000",
     },
   },
 });

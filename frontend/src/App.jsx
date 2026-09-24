@@ -1,37 +1,50 @@
-import { Routes, Route } from "react-router-dom";
-import Login from "./pages/Login";
-import OidcCallback from "./pages/OidcCallback";
-import Dashboard from "./pages/Dashboard";
-import StudentDashboard from "./pages/StudentDashboard";
-import TeacherDashboard from "./pages/TeacherDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
-import ProtectedRoute from "./components/ProtectedRoute";
-import RoleRoute from "./components/RoleRoute";
+import { Navigate, Route, Routes } from "react-router-dom";
+import { useAuth } from "./context/AuthContext";
 import Layout from "./components/Layout";
+import RequireRole from "./components/RequireRole";
+import Login from "./pages/Login";
+import TasksPage from "./pages/student/TasksPage";
+import HoursPage from "./pages/student/HoursPage";
+import ProgramPage from "./pages/teacher/ProgramPage";
+import OverviewPage from "./pages/admin/OverviewPage";
+
+const HOME = {
+  student: "/student/tasks",
+  teacher: "/teacher",
+  admin: "/admin",
+};
+
+function HomeRedirect() {
+  const { user } = useAuth();
+  return <Navigate to={user ? HOME[user.role] : "/login"} replace />;
+}
 
 export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
-      <Route path="/auth/callback" element={<OidcCallback />} />
+      <Route path="/" element={<HomeRedirect />} />
 
-      <Route element={<ProtectedRoute />}>
+      <Route element={<RequireRole roles={["student"]} />}>
         <Route element={<Layout />}>
-          <Route path="/" element={<Dashboard />} />
-
-          <Route element={<RoleRoute allowed={["teacher", "admin"]} />}>
-            <Route path="/teacher/*" element={<TeacherDashboard />} />
-          </Route>
-
-          <Route element={<RoleRoute allowed={["student"]} />}>
-            <Route path="/student/*" element={<StudentDashboard />} />
-          </Route>
-
-          <Route element={<RoleRoute allowed={["admin"]} />}>
-            <Route path="/admin/*" element={<AdminDashboard />} />
-          </Route>
+          <Route path="/student/tasks" element={<TasksPage />} />
+          <Route path="/student/hours" element={<HoursPage />} />
         </Route>
       </Route>
+
+      <Route element={<RequireRole roles={["teacher"]} />}>
+        <Route element={<Layout />}>
+          <Route path="/teacher" element={<ProgramPage />} />
+        </Route>
+      </Route>
+
+      <Route element={<RequireRole roles={["admin"]} />}>
+        <Route element={<Layout />}>
+          <Route path="/admin" element={<OverviewPage />} />
+        </Route>
+      </Route>
+
+      <Route path="*" element={<HomeRedirect />} />
     </Routes>
   );
 }

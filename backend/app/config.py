@@ -1,23 +1,20 @@
-from pydantic_settings import BaseSettings
 from functools import lru_cache
+
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
     DATABASE_URL: str
     SECRET_KEY: str
 
-    ENTRA_TENANT_ID: str
-    ENTRA_CLIENT_ID: str
-    ENTRA_CLIENT_SECRET: str
-    ENTRA_REDIRECT_URI: str
+    # One school day, so a student signs in once per session.
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 720
 
-    JWT_ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
-    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
-
-    DEFAULT_STUDENT_PIN: str = ""
+    # Used only by `python -m app.seed`.
     ADMIN_USER: str = "admin"
     ADMIN_PASS: str = ""
+    DEFAULT_STAFF_PASSWORD: str = ""
+    DEFAULT_STUDENT_PIN: str = ""
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 

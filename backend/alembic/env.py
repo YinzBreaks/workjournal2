@@ -2,10 +2,10 @@ import asyncio
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy.ext.asyncio import create_async_engine
 
+import app.models  # noqa: F401  (registers every table on Base.metadata)
 from app.config import get_settings
-from app.models import Base
+from app.db import Base, engine
 
 config = context.config
 if config.config_file_name is not None:
@@ -15,9 +15,8 @@ target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:
-    settings = get_settings()
     context.configure(
-        url=settings.DATABASE_URL,
+        url=get_settings().DATABASE_URL,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
@@ -33,20 +32,12 @@ def do_run_migrations(connection):
 
 
 async def run_async_migrations() -> None:
-    settings = get_settings()
-    engine = create_async_engine(settings.DATABASE_URL)
-
     async with engine.connect() as connection:
         await connection.run_sync(do_run_migrations)
-
     await engine.dispose()
-
-
-def run_migrations_online() -> None:
-    asyncio.run(run_async_migrations())
 
 
 if context.is_offline_mode():
     run_migrations_offline()
 else:
-    run_migrations_online()
+    asyncio.run(run_async_migrations())

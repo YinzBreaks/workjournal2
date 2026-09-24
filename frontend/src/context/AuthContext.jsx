@@ -1,130 +1,38 @@
-import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
-import api, {
-  setAccessToken,
-  getAccessToken,
-  clearTokens,
-  setRefreshToken,
-  getRefreshToken,
-} from "../lib/api";
+import { createContext, useContext, useEffect, useState } from "react";
+import api, { clearToken, getToken, setToken } from "../lib/api";
 
 const AuthContext = createContext(null);
 
-function decodeJwtPayload(token) {
-  try {
-    const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
-    return JSON.parse(atob(base64));
-  } catch {
-    return null;
-  }
-}
-
+// `user` is { id, name, role } from GET /api/auth/me, or null when signed out.
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const refreshTimerRef = useRef(null);
+  const [loading, setLoading] = useState(() => Boolean(getToken()));
 
-  const scheduleRefresh = useCallback((token) => {
-    if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
-
-    const payload = decodeJwtPayload(token);
-    if (!payload?.exp) return;
-
-    const msUntilExpiry = payload.exp * 1000 - Date.now();
-    const refreshIn = Math.max(msUntilExpiry - 60_000, 0);
-
-    refreshTimerRef.current = setTimeout(async () => {
-      try {
-        const { data } = await api.post("/auth/refresh", {
-          refresh_token: getRefreshToken(),
-        });
-        setAccessToken(data.access_token);
-        if (data.refresh_token) setRefreshToken(data.refresh_token);
-
-        const newPayload = decodeJwtPayload(data.access_token);
-        setUser({
-          id: newPayload.sub || newPayload.user_id,
-          name: newPayload.name,
-          role: newPayload.role,
-        });
-        scheduleRefresh(data.access_token);
-      } catch {
-        clearTokens();
-        setUser(null);
-      }
-    }, refreshIn);
-  }, []);
-
-  const processTokens = useCallback(
-    (accessTokenStr, refreshTokenStr) => {
-      setAccessToken(accessTokenStr);
-      if (refreshTokenStr) setRefreshToken(refreshTokenStr);
-
-      const payload = decodeJwtPayload(accessTokenStr);
-      if (!payload) {
-        clearTokens();
-        setUser(null);
-        return;
-      }
-
-      setUser({
-        id: payload.sub || payload.user_id,
-        name: payload.name,
-        role: payload.role,
-      });
-      scheduleRefresh(accessTokenStr);
-    },
-    [scheduleRefresh]
-  );
-
+  // Restore a session after a page reload.
   useEffect(() => {
-    let ignore = false;
-    const existingRefresh = getRefreshToken();
-    if (existingRefresh) {
-      api
-        .post("/auth/refresh", { refresh_token: existingRefresh })
-        .then(({ data }) => {
-          // A refresh token can only be redeemed once. In React 18 dev
-          // StrictMode this effect runs twice on mount, so two requests
-          // can race with the same stored token -- the loser's 401 must
-          // not undo the winner's freshly-stored token below.
-          if (!ignore) processTokens(data.access_token, data.refresh_token);
-        })
-        .catch(() => {
-          if (!ignore) clearTokens();
-        })
-        .finally(() => {
-          if (!ignore) setLoading(false);
-        });
-    } else {
-      setLoading(false);
-    }
-
-    return () => {
-      ignore = true;
-      if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
-    };
-  }, [processTokens]);
-
-  const login = useCallback(
-    (accessTokenStr, refreshTokenStr) => {
-      processTokens(accessTokenStr, refreshTokenStr);
-    },
-    [processTokens]
-  );
-
-  const logout = useCallback(async () => {
-    try {
-      await api.post("/auth/logout");
-    } catch {
-      // logout is best-effort
-    }
-    clearTokens();
-    setUser(null);
-    if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+    if (!getToken()) return;
+    api
+      .get("/auth/me")
+      .then(({ data }) => setUser(data))
+      .catch(() => clearToken())
+      .finally(() => setLoading(false));
   }, []);
 
-  const isAuthenticated = !!user && !!getAccessToken();
-  const role = user?.role || null;
+  async function login(token) {
+    setToken(token);
+    try {
+      const { data } = await api.get("/auth/me");
+      setUser(data);
+    } catch (error) {
+      clearToken();
+      throw error;
+    }
+  }
+
+  function logout() {
+    clearToken();
+    setUser(null);
+  }
 
   if (loading) {
     return (
@@ -135,9 +43,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, role, login, logout, isAuthenticated }}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={{ user, login, logout }}>{children}</AuthContext.Provider>
   );
 }
 

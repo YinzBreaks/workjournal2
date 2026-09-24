@@ -1,79 +1,43 @@
 import axios from "axios";
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "/api",
-  headers: { "Content-Type": "application/json" },
-});
+// Per-tab session: closing the tab signs the student out, which is what
+// you want on a shared lab computer.
+const TOKEN_KEY = "bj_token";
 
-let accessToken = null;
-let refreshPromise = null;
-
-export function setAccessToken(token) {
-  accessToken = token;
+export function getToken() {
+  return sessionStorage.getItem(TOKEN_KEY);
 }
 
-export function getAccessToken() {
-  return accessToken;
+export function setToken(token) {
+  sessionStorage.setItem(TOKEN_KEY, token);
 }
 
-export function clearTokens() {
-  accessToken = null;
-  sessionStorage.removeItem("wj_refresh");
+export function clearToken() {
+  sessionStorage.removeItem(TOKEN_KEY);
 }
 
-export function setRefreshToken(token) {
-  sessionStorage.setItem("wj_refresh", token);
+// The server's message for a failed request, or `fallback` if it has none.
+export function errorMessage(error, fallback) {
+  const detail = error?.response?.data?.detail;
+  return typeof detail === "string" ? detail : fallback;
 }
 
-export function getRefreshToken() {
-  return sessionStorage.getItem("wj_refresh");
-}
-
-async function refreshAccessToken() {
-  const refresh = getRefreshToken();
-  if (!refresh) throw new Error("No refresh token");
-
-  const { data } = await axios.post(
-    `${import.meta.env.VITE_API_URL || "/api"}/auth/refresh`,
-    { refresh_token: refresh }
-  );
-
-  setAccessToken(data.access_token);
-  if (data.refresh_token) {
-    setRefreshToken(data.refresh_token);
-  }
-  return data.access_token;
-}
+const api = axios.create({ baseURL: "/api" });
 
 api.interceptors.request.use((config) => {
-  if (accessToken) {
-    config.headers.Authorization = `Bearer ${accessToken}`;
-  }
+  const token = getToken();
+  if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const original = error.config;
-    if (error.response?.status === 401 && !original._retry) {
-      original._retry = true;
-
-      if (!refreshPromise) {
-        refreshPromise = refreshAccessToken().finally(() => {
-          refreshPromise = null;
-        });
-      }
-
-      try {
-        const newToken = await refreshPromise;
-        original.headers.Authorization = `Bearer ${newToken}`;
-        return api(original);
-      } catch {
-        clearTokens();
-        window.location.href = "/login";
-        return Promise.reject(error);
-      }
+  (error) => {
+    // A stored token was rejected (expired, or the account was turned off).
+    // A failed sign-in has no stored token, so it falls through to the form.
+    if (error.response?.status === 401 && getToken()) {
+      clearToken();
+      window.location.assign("/login");
     }
     return Promise.reject(error);
   }

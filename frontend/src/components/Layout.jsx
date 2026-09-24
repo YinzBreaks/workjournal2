@@ -1,32 +1,30 @@
-import { Outlet, Link, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import BeattieLogo from "./BeattieLogo";
 
+// Every link here must be a real route in App.jsx.
 const NAV_ITEMS = {
-  admin: [
-    { to: "/admin", label: "Dashboard" },
-    { to: "/admin/programs", label: "Programs" },
-    { to: "/admin/users", label: "Users" },
-  ],
-  teacher: [
-    { to: "/teacher", label: "Dashboard" },
-    { to: "/teacher/journals", label: "Journals" },
-    { to: "/teacher/students", label: "Students" },
-  ],
   student: [
-    { to: "/student", label: "Dashboard" },
-    { to: "/student/journal", label: "My Journal" },
+    { to: "/student/tasks", label: "My Tasks" },
+    { to: "/student/hours", label: "My Hours" },
   ],
+  teacher: [{ to: "/teacher", label: "My Program" }],
+  admin: [{ to: "/admin", label: "Overview" }],
 };
 
+function navClass({ isActive }) {
+  const base = "px-3 py-2 text-sm font-medium rounded-md";
+  return isActive
+    ? `${base} bg-brand-50 text-brand-700`
+    : `${base} text-gray-600 hover:text-gray-900 hover:bg-gray-100`;
+}
+
 export default function Layout() {
-  const { user, role, logout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const navItems = NAV_ITEMS[role] || [];
-
-  async function handleLogout() {
-    await logout();
+  function handleSignOut() {
+    logout();
     navigate("/login");
   }
 
@@ -35,34 +33,22 @@ export default function Layout() {
       <nav className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-14">
-            <div className="flex items-center gap-8">
+            <div className="flex items-center gap-6">
               <Link to="/" className="flex items-center gap-2 text-lg font-bold text-gray-900">
                 <BeattieLogo size={32} />
-                Beattie Journal
+                <span className="hidden sm:inline">Beattie Journal</span>
               </Link>
-              <div className="hidden sm:flex gap-1">
-                {navItems.map((item) => (
-                  <Link
-                    key={item.to}
-                    to={item.to}
-                    className="px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:text-gray-900 hover:bg-gray-100"
-                  >
+              <div className="flex gap-1">
+                {NAV_ITEMS[user.role].map((item) => (
+                  <NavLink key={item.to} to={item.to} className={navClass}>
                     {item.label}
-                  </Link>
+                  </NavLink>
                 ))}
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">
-                {user?.name}{" "}
-                <span className="inline-flex items-center rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">
-                  {role}
-                </span>
-              </span>
-              <button
-                onClick={handleLogout}
-                className="text-sm text-gray-500 hover:text-gray-700"
-              >
+              <span className="hidden sm:inline text-sm text-gray-600">{user.name}</span>
+              <button onClick={handleSignOut} className="text-sm text-gray-500 hover:text-gray-700">
                 Sign out
               </button>
             </div>
