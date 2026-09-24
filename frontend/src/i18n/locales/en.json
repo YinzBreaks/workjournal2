@@ -92,7 +92,9 @@
     "save": "Save",
     "saving": "Saving...",
     "moveUp": "Move \"{task}\" up",
-    "moveDown": "Move \"{task}\" down"
+    "moveDown": "Move \"{task}\" down",
+    "moveProjectUp": "Move project \"{project}\" up",
+    "moveProjectDown": "Move project \"{project}\" down"
   },
   "admin": {
     "loadFailed": "Couldn't load the overview. Refresh to try again.",

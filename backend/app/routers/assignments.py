@@ -33,7 +33,12 @@ async def my_assignments(
 ):
     result = await db.scalars(select(Assignment).where(Assignment.student_id == user.id))
     assignments = sorted(
-        result.unique().all(), key=lambda a: (a.task.project_id, a.task.position, a.task.id)
+        result.unique().all(), key=lambda a: (
+            a.task.project.position,
+            a.task.project_id,
+            a.task.position,
+            a.task.id,
+        ),
     )
     return [assignment_out(a) for a in assignments]
 

@@ -18,6 +18,7 @@ from app.schemas import (
     ProgramProjectOut,
     ProgramTaskOut,
     ProjectIn,
+    ProjectOrderIn,
     TaskIn,
     TaskOrderIn,
     TaskStatsOut,
@@ -52,16 +53,45 @@ async def create_project(
     await ensure_program_access(db, user, program_id)
     if await db.get(Program, program_id) is None:
         raise not_found()
+    last = await db.scalar(
+        select(func.max(Project.position)).where(Project.program_id == program_id)
+    )
     project = Project(
         program_id=program_id,
         title=body.title.strip(),
         description=body.description.strip(),
+        position=0 if last is None else last + 1,
     )
     db.add(project)
     await db.commit()
     return ProgramProjectOut(
         id=project.id, title=project.title, description=project.description, tasks=[]
     )
+
+
+@router.put("/programs/{program_id}/project-order", status_code=status.HTTP_204_NO_CONTENT)
+async def reorder_projects(
+    program_id: int,
+    body: ProjectOrderIn,
+    user: User = Depends(staff_only),
+    _: User = Depends(limit_writes),
+    db: AsyncSession = Depends(get_db),
+):
+    """Students work through projects in this order too."""
+    await ensure_program_access(db, user, program_id)
+    projects = {
+        p.id: p
+        for p in (
+            await db.scalars(select(Project).where(Project.program_id == program_id))
+        ).unique()
+    }
+    # Same rule as task-order: exactly this program's projects, each once.
+    if len(body.project_ids) != len(projects) or set(body.project_ids) != set(projects):
+        raise bad_request("stale_order")
+    for position, project_id in enumerate(body.project_ids):
+        projects[project_id].position = position
+    await db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.patch("/projects/{project_id}", response_model=ItemOut)

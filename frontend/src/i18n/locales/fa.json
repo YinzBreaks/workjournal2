@@ -92,7 +92,9 @@
     "save": "ذخیره",
     "saving": "در حال ذخیره...",
     "moveUp": "انتقال «{task}» به بالا",
-    "moveDown": "انتقال «{task}» به پایین"
+    "moveDown": "انتقال «{task}» به پایین",
+    "moveProjectUp": "انتقال پروژه «{project}» به بالا",
+    "moveProjectDown": "انتقال پروژه «{project}» به پایین"
   },
   "admin": {
     "loadFailed": "بارگذاری نمای کلی ممکن نشد. صفحه را تازه کنید و دوباره تلاش کنید.",

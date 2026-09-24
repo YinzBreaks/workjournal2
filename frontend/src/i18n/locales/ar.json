@@ -92,7 +92,9 @@
     "save": "حفظ",
     "saving": "جارٍ الحفظ...",
     "moveUp": "نقل \"{task}\" للأعلى",
-    "moveDown": "نقل \"{task}\" للأسفل"
+    "moveDown": "نقل \"{task}\" للأسفل",
+    "moveProjectUp": "نقل المشروع \"{project}\" للأعلى",
+    "moveProjectDown": "نقل المشروع \"{project}\" للأسفل"
   },
   "admin": {
     "loadFailed": "تعذّر تحميل النظرة العامة. حدّث الصفحة وحاول مرة أخرى.",

@@ -126,6 +126,12 @@ class TaskIn(StrictIn):
     description: str = Field(default="", max_length=2000)
 
 
+class ProjectOrderIn(StrictIn):
+    """Every project id in the program, in the new order."""
+
+    project_ids: list[int] = Field(max_length=500)
+
+
 class TaskOrderIn(StrictIn):
     """Every task id in the project, in the new order."""
 

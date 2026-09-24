@@ -89,7 +89,8 @@ frontend file, or one of each.
       routers/
         auth.py         GET /auth/me (id, name, role, logout_url)
         programs.py     /programs/mine, /{id}/roster, /{id}/projects
-        projects.py     POST /programs/{id}/projects, PATCH/DELETE /projects/{id},
+        projects.py     POST /programs/{id}/projects, PUT /programs/{id}/project-order,
+                        PATCH/DELETE /projects/{id},
                         POST /projects/{id}/tasks (assigns to every enrolled
                         student), PUT /projects/{id}/task-order,
                         PATCH/DELETE /tasks/{id}  (teachers/admins;
@@ -117,7 +118,7 @@ frontend file, or one of each.
       components/student/       AssignmentCard, HoursForm
       pages/teacher/            ProgramPage (teachers and admins)
       components/teacher/       RosterTable, TaskRow (view/edit/move a task),
-                                ProjectHeader (view/edit a project),
+                                ProjectHeader (view/edit/move a project),
                                 ItemForm (title + description fields),
                                 NewItemForm ("+ New ..." button + ItemForm)
       pages/admin/              OverviewPage
@@ -130,7 +131,8 @@ A `User` mirrors an Authelia account (`username`, `display_name`, `email`,
 have a `Staff` row with a `kind`: instructor, assistant, learning_support, or
 integration. Only integration staff can be tagged on tasks. `Program` links to
 staff via `ProgramStaff` and students via `ProgramStudent`. A `Project`
-belongs to a program and has ordered `Task`s. An `Assignment` is one
+belongs to a program (ordered by `position`) and has ordered `Task`s.
+Students work through tasks by project position, then task position. An `Assignment` is one
 student's copy of one task; `status` is where it stands. A `WorkLog` is time
 a student logged.
 
@@ -151,8 +153,7 @@ a student logged.
 
 ## Backlog (each is one small, self-contained task)
 
-1. Teachers can't reorder projects (tasks within a project, yes).
-2. Teachers see only hour totals. Add a per-student hours view.
-3. No UI to deactivate a student (`users.active`).
-4. Emit `journal.entry_reviewed` once teachers can review work.
-5. Swap `BeattieLogo.jsx` for the real logo file (`frontend/public/`).
+1. Teachers see only hour totals. Add a per-student hours view.
+2. No UI to deactivate a student (`users.active`).
+3. Emit `journal.entry_reviewed` once teachers can review work.
+4. Swap `BeattieLogo.jsx` for the real logo file (`frontend/public/`).

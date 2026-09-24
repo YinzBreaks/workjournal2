@@ -83,7 +83,7 @@ async def program_projects(
 
     projects = (
         await db.scalars(
-            select(Project).where(Project.program_id == program_id).order_by(Project.id)
+            select(Project).where(Project.program_id == program_id).order_by(Project.position, Project.id)
         )
     ).all()
     tasks = (

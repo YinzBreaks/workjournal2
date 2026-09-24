@@ -96,6 +96,23 @@ export default function ProgramPage() {
     }
   }
 
+  // Same idea as moveTask, for whole projects.
+  async function moveProject(index, delta) {
+    const before = projects;
+    const next = [...before];
+    [next[index], next[index + delta]] = [next[index + delta], next[index]];
+    setError("");
+    setProjects(next);
+    try {
+      await api.put(`/programs/${programId}/project-order`, {
+        project_ids: next.map((p) => p.id),
+      });
+    } catch (err) {
+      setProjects(before);
+      setError(errorMessage(err, t));
+    }
+  }
+
   async function deleteProject(project) {
     if (!window.confirm(t("teacher.confirmDeleteProject", { title: project.title }))) return;
     setError("");
@@ -156,9 +173,19 @@ export default function ProgramPage() {
           {projects.length === 0 && (
             <p className="text-sm text-gray-500">{t("teacher.noProjects")}</p>
           )}
-          {projects.map((project) => (
+          {projects.map((project, projectIndex) => (
             <section key={project.id}>
-              <ProjectHeader project={project} onSave={saveProject} onDelete={deleteProject} />
+              <ProjectHeader
+                project={project}
+                onSave={saveProject}
+                onDelete={deleteProject}
+                onMoveUp={projectIndex > 0 ? () => moveProject(projectIndex, -1) : null}
+                onMoveDown={
+                  projectIndex < projects.length - 1
+                    ? () => moveProject(projectIndex, 1)
+                    : null
+                }
+              />
               <div className="rounded-lg border border-gray-200 bg-white divide-y divide-gray-100">
                 {project.tasks.map((task, index) => (
                   <TaskRow

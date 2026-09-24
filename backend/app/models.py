@@ -127,6 +127,7 @@ class Project(Base):
     program_id: Mapped[int] = mapped_column(ForeignKey("programs.id", ondelete="CASCADE"))
     title: Mapped[str] = mapped_column(String(255))
     description: Mapped[str] = mapped_column(Text, default="")
+    position: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
 
     program: Mapped[Program] = relationship(lazy="joined")
 

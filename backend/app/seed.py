@@ -64,7 +64,7 @@ async def seed() -> None:
         # Starter work only goes into a brand-new class. After that the
         # projects belong to the teachers; a restart never re-adds ones
         # they deleted.
-        for spec in data.PROJECTS if new_class else []:
+        for project_position, spec in enumerate(data.PROJECTS if new_class else []):
             project = await db.scalar(
                 select(Project).where(
                     Project.program_id == program.id, Project.title == spec["title"]
@@ -75,6 +75,7 @@ async def seed() -> None:
                     program_id=program.id,
                     title=spec["title"],
                     description=spec["description"],
+                    position=project_position,
                 )
                 db.add(project)
                 await db.flush()
