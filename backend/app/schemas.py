@@ -126,6 +126,12 @@ class TaskIn(StrictIn):
     description: str = Field(default="", max_length=2000)
 
 
+class TaskOrderIn(StrictIn):
+    """Every task id in the project, in the new order."""
+
+    task_ids: list[int] = Field(max_length=500)
+
+
 class ItemOut(BaseModel):
     """What an edit returns: the saved title and description."""
 

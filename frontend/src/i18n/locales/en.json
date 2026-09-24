@@ -90,7 +90,9 @@
     "confirmDeleteTask": "Delete \"{title}\"? Students lose their progress on it.",
     "edit": "Edit",
     "save": "Save",
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "moveUp": "Move \"{task}\" up",
+    "moveDown": "Move \"{task}\" down"
   },
   "admin": {
     "loadFailed": "Couldn't load the overview. Refresh to try again.",
@@ -116,6 +118,7 @@
     "too_large": "That's too much text. Shorten it and try again.",
     "not_enrolled": "You're not in that class.",
     "future_date": "You can't log hours for a future date.",
-    "integration_only": "Only integration staff can be added to a task."
+    "integration_only": "Only integration staff can be added to a task.",
+    "stale_order": "Someone changed these tasks since you opened the page. Refresh and try again."
   }
 }

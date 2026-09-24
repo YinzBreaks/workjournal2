@@ -79,6 +79,23 @@ export default function ProgramPage() {
     );
   }
 
+  // Swap a task with its neighbour. Shows the new order right away and
+  // puts the old one back if the server says no.
+  async function moveTask(projectId, index, delta) {
+    const before = projects;
+    const project = before.find((p) => p.id === projectId);
+    const tasks = [...project.tasks];
+    [tasks[index], tasks[index + delta]] = [tasks[index + delta], tasks[index]];
+    setError("");
+    setProjects(before.map((p) => (p.id === projectId ? { ...p, tasks } : p)));
+    try {
+      await api.put(`/projects/${projectId}/task-order`, { task_ids: tasks.map((x) => x.id) });
+    } catch (err) {
+      setProjects(before);
+      setError(errorMessage(err, t));
+    }
+  }
+
   async function deleteProject(project) {
     if (!window.confirm(t("teacher.confirmDeleteProject", { title: project.title }))) return;
     setError("");
@@ -143,7 +160,7 @@ export default function ProgramPage() {
             <section key={project.id}>
               <ProjectHeader project={project} onSave={saveProject} onDelete={deleteProject} />
               <div className="rounded-lg border border-gray-200 bg-white divide-y divide-gray-100">
-                {project.tasks.map((task) => (
+                {project.tasks.map((task, index) => (
                   <TaskRow
                     key={task.id}
                     task={task}
@@ -151,6 +168,12 @@ export default function ProgramPage() {
                     onStaffChange={updateTaskStaff}
                     onSave={saveTask}
                     onDelete={deleteTask}
+                    onMoveUp={index > 0 ? () => moveTask(project.id, index, -1) : null}
+                    onMoveDown={
+                      index < project.tasks.length - 1
+                        ? () => moveTask(project.id, index, 1)
+                        : null
+                    }
                   />
                 ))}
                 <div className="p-4">

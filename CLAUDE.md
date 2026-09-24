@@ -91,7 +91,8 @@ frontend file, or one of each.
         programs.py     /programs/mine, /{id}/roster, /{id}/projects
         projects.py     POST /programs/{id}/projects, PATCH/DELETE /projects/{id},
                         POST /projects/{id}/tasks (assigns to every enrolled
-                        student), PATCH/DELETE /tasks/{id}  (teachers/admins;
+                        student), PUT /projects/{id}/task-order,
+                        PATCH/DELETE /tasks/{id}  (teachers/admins;
                         editing keeps student progress)
         assignments.py  GET /assignments (own), PATCH /assignments/{id}
         worklogs.py     GET/POST /worklogs, DELETE /worklogs/{id} (own)
@@ -115,7 +116,7 @@ frontend file, or one of each.
       pages/student/            TasksPage (one task at a time), HoursPage
       components/student/       AssignmentCard, HoursForm
       pages/teacher/            ProgramPage (teachers and admins)
-      components/teacher/       RosterTable, TaskRow (view/edit a task),
+      components/teacher/       RosterTable, TaskRow (view/edit/move a task),
                                 ProjectHeader (view/edit a project),
                                 ItemForm (title + description fields),
                                 NewItemForm ("+ New ..." button + ItemForm)
@@ -150,7 +151,7 @@ a student logged.
 
 ## Backlog (each is one small, self-contained task)
 
-1. Teachers can't reorder tasks within a project (`Task.position`).
+1. Teachers can't reorder projects (tasks within a project, yes).
 2. Teachers see only hour totals. Add a per-student hours view.
 3. No UI to deactivate a student (`users.active`).
 4. Emit `journal.entry_reviewed` once teachers can review work.

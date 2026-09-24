@@ -7,8 +7,16 @@ import ItemForm from "./ItemForm";
 // One task in the teacher view: status counts, plus tagging integration
 // staff students can ask for help. onStaffChange(taskId, newStaffList),
 // onSave(task, { title, description }) returns a promise, onDelete(task)
-// confirms and deletes.
-export default function TaskRow({ task, supportStaff, onStaffChange, onSave, onDelete }) {
+// confirms and deletes. onMoveUp / onMoveDown are null at the ends.
+export default function TaskRow({
+  task,
+  supportStaff,
+  onStaffChange,
+  onSave,
+  onDelete,
+  onMoveUp,
+  onMoveDown,
+}) {
   const t = useT();
   const [editing, setEditing] = useState(false);
   const [adding, setAdding] = useState("");
@@ -59,9 +67,31 @@ export default function TaskRow({ task, supportStaff, onStaffChange, onSave, onD
   return (
     <div className="p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="font-medium text-gray-900">{task.title}</p>
-          {task.description && <p className="mt-0.5 text-sm text-gray-500">{task.description}</p>}
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="flex shrink-0 flex-col">
+            <button
+              onClick={onMoveUp}
+              disabled={!onMoveUp}
+              aria-label={t("teacher.moveUp", { task: task.title })}
+              className="rounded px-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-800 disabled:invisible"
+            >
+              &#9650;
+            </button>
+            <button
+              onClick={onMoveDown}
+              disabled={!onMoveDown}
+              aria-label={t("teacher.moveDown", { task: task.title })}
+              className="rounded px-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-800 disabled:invisible"
+            >
+              &#9660;
+            </button>
+          </div>
+          <div className="min-w-0">
+            <p className="font-medium text-gray-900">{task.title}</p>
+            {task.description && (
+              <p className="mt-0.5 text-sm text-gray-500">{task.description}</p>
+            )}
+          </div>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2 text-xs font-medium">
           {STATUSES.map((status) => (

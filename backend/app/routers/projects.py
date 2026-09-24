@@ -1,4 +1,5 @@
-"""Teachers building their class: create, edit, and remove projects and tasks.
+"""Teachers building their class: create, edit, reorder, and remove
+projects and tasks.
 
 A new task is assigned to every student enrolled in the program right away.
 Students who join later get it on first sign-in (provisioning.py).
@@ -9,7 +10,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_db
-from app.errors import not_found
+from app.errors import bad_request, not_found
 from app.models import Assignment, Program, ProgramStudent, Project, Task, User, UserRole
 from app.ratelimit import limit_writes
 from app.schemas import (
@@ -18,6 +19,7 @@ from app.schemas import (
     ProgramTaskOut,
     ProjectIn,
     TaskIn,
+    TaskOrderIn,
     TaskStatsOut,
 )
 from app.security import ensure_program_access, require_role
@@ -134,6 +136,32 @@ async def create_task(
         support_staff=[],
         stats=TaskStatsOut(not_started=len(student_ids)),
     )
+
+
+@router.put("/projects/{project_id}/task-order", status_code=status.HTTP_204_NO_CONTENT)
+async def reorder_tasks(
+    project_id: int,
+    body: TaskOrderIn,
+    user: User = Depends(staff_only),
+    _: User = Depends(limit_writes),
+    db: AsyncSession = Depends(get_db),
+):
+    """Students see their tasks in this order too."""
+    project = await _project_for(db, user, project_id)
+    tasks = {
+        t.id: t
+        for t in (
+            await db.scalars(select(Task).where(Task.project_id == project.id))
+        ).unique()
+    }
+    # Must be exactly this project's tasks, each once: a stale page (someone
+    # added or deleted a task meanwhile) gets a code telling it to reload.
+    if len(body.task_ids) != len(tasks) or set(body.task_ids) != set(tasks):
+        raise bad_request("stale_order")
+    for position, task_id in enumerate(body.task_ids):
+        tasks[task_id].position = position
+    await db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.patch("/tasks/{task_id}", response_model=ItemOut)
