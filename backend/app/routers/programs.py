@@ -3,6 +3,7 @@ from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_db
+from app.errors import not_found
 from app.models import (
     Assignment,
     Program,
@@ -21,8 +22,10 @@ from app.schemas import (
     ProgramTaskOut,
     RosterRowOut,
     TaskStatsOut,
+    WorkLogOut,
     staff_out,
 )
+from app.routers.worklogs import worklog_out
 from app.security import ensure_program_access, get_current_user
 
 router = APIRouter(prefix="/programs", tags=["programs"])
@@ -70,6 +73,29 @@ async def program_roster(
         RosterRowOut(id=id_, name=name, total_minutes=minutes)
         for id_, name, minutes in rows.all()
     ]
+
+
+@router.get("/{program_id}/students/{student_id}/worklogs", response_model=list[WorkLogOut])
+async def student_worklogs(
+    program_id: int,
+    student_id: int,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Teacher view: one student's hour entries in this program, newest first.
+
+    Only students enrolled in the program are visible; anyone else is a 404,
+    so a teacher can't read other classes' students by guessing ids.
+    """
+    await ensure_program_access(db, user, program_id)
+    if await db.get(ProgramStudent, (program_id, student_id)) is None:
+        raise not_found()
+    result = await db.scalars(
+        select(WorkLog)
+        .where(WorkLog.student_id == student_id, WorkLog.program_id == program_id)
+        .order_by(WorkLog.date.desc(), WorkLog.id.desc())
+    )
+    return [worklog_out(log) for log in result.all()]
 
 
 @router.get("/{program_id}/projects", response_model=list[ProgramProjectOut])

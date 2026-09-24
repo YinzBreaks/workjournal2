@@ -88,7 +88,9 @@ frontend file, or one of each.
       main.py           /api routers, body-size limit, serves built frontend
       routers/
         auth.py         GET /auth/me (id, name, role, logout_url)
-        programs.py     /programs/mine, /{id}/roster, /{id}/projects
+        programs.py     /programs/mine, /{id}/roster, /{id}/projects,
+                        /{id}/students/{student_id}/worklogs (teacher view
+                        of one enrolled student's hours)
         projects.py     POST /programs/{id}/projects, PUT /programs/{id}/project-order,
                         PATCH/DELETE /projects/{id},
                         POST /projects/{id}/tasks (assigns to every enrolled
@@ -117,7 +119,9 @@ frontend file, or one of each.
       pages/student/            TasksPage (one task at a time), HoursPage
       components/student/       AssignmentCard, HoursForm
       pages/teacher/            ProgramPage (teachers and admins)
-      components/teacher/       RosterTable, TaskRow (view/edit/move a task),
+      components/teacher/       RosterTable (click a student to open
+                                StudentHours: their entries), TaskRow
+                                (view/edit/move a task),
                                 ProjectHeader (view/edit/move a project),
                                 ItemForm (title + description fields),
                                 NewItemForm ("+ New ..." button + ItemForm)
@@ -153,7 +157,6 @@ a student logged.
 
 ## Backlog (each is one small, self-contained task)
 
-1. Teachers see only hour totals. Add a per-student hours view.
-2. No UI to deactivate a student (`users.active`).
-3. Emit `journal.entry_reviewed` once teachers can review work.
-4. Swap `BeattieLogo.jsx` for the real logo file (`frontend/public/`).
+1. No UI to deactivate a student (`users.active`).
+2. Emit `journal.entry_reviewed` once teachers can review work.
+3. Swap `BeattieLogo.jsx` for the real logo file (`frontend/public/`).

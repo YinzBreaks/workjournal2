@@ -168,7 +168,7 @@ export default function ProgramPage() {
         <p className="text-sm text-gray-500">{t("common.loading")}</p>
       ) : (
         <>
-          <RosterTable roster={roster} />
+          <RosterTable programId={programId} roster={roster} />
 
           {projects.length === 0 && (
             <p className="text-sm text-gray-500">{t("teacher.noProjects")}</p>

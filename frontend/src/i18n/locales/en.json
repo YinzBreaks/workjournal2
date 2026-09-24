@@ -94,7 +94,9 @@
     "moveUp": "Move \"{task}\" up",
     "moveDown": "Move \"{task}\" down",
     "moveProjectUp": "Move project \"{project}\" up",
-    "moveProjectDown": "Move project \"{project}\" down"
+    "moveProjectDown": "Move project \"{project}\" down",
+    "noHours": "No hours logged yet.",
+    "hoursLoadFailed": "Couldn't load this student's hours. Try again."
   },
   "admin": {
     "loadFailed": "Couldn't load the overview. Refresh to try again.",

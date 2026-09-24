@@ -94,7 +94,9 @@
     "moveUp": "نقل \"{task}\" للأعلى",
     "moveDown": "نقل \"{task}\" للأسفل",
     "moveProjectUp": "نقل المشروع \"{project}\" للأعلى",
-    "moveProjectDown": "نقل المشروع \"{project}\" للأسفل"
+    "moveProjectDown": "نقل المشروع \"{project}\" للأسفل",
+    "noHours": "لم تُسجَّل أي ساعات بعد.",
+    "hoursLoadFailed": "تعذّر تحميل ساعات هذا الطالب. حاول مرة أخرى."
   },
   "admin": {
     "loadFailed": "تعذّر تحميل النظرة العامة. حدّث الصفحة وحاول مرة أخرى.",
